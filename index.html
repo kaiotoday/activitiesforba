@@ -30,7 +30,6 @@
             background-attachment: fixed;
             color: #4c0519;
             min-height: 100vh;
-            -webkit-tap-highlight-color: transparent;
         }
         
         .fade-in { animation: fadeIn 0.4s ease-out forwards; }
@@ -44,11 +43,9 @@
         .badge-res-med { background-color: #ffedd5; color: #9a3412; border: 1px solid #fed7aa; }
         .badge-res-low { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
         
-        /* Card Hover (Disabled on touch devices for better perf, enabled on hover) */
-        @media (hover: hover) {
-            .card-hover:hover { transform: translateY(-4px) scale(1.01); box-shadow: 0 15px 30px -5px rgba(251, 113, 133, 0.2); z-index: 10; }
-        }
-        .card-base { transition: all 0.2s ease-out; }
+        /* Card Hover */
+        .card-hover { transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .card-hover:hover { transform: translateY(-4px) scale(1.01); box-shadow: 0 15px 30px -5px rgba(251, 113, 133, 0.2); z-index: 10; }
 
         /* Image Handling */
         .img-fallback {
@@ -58,7 +55,7 @@
             width: 100%; height: 100%;
         }
         
-        /* Custom Scrollbar - Hidden on mobile for cleaner look */
+        /* Scrollbars */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
@@ -66,10 +63,8 @@
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #fda4af; border-radius: 20px; }
 
-        /* Beer Animation */
+        /* Animation Keyframes */
         .beer-cursor { transition: left 1s linear; will-change: left; }
-        
-        /* Heart Animation */
         .heart-active { animation: heartPop 0.3s ease-out forwards; }
         @keyframes heartPop { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
     </style>
@@ -232,7 +227,7 @@
             { id: "p_f21", city: "Prag", cat: "Essen", subtag: "street", title: "Burrito Loco", cost: 10, time: "15min", res: "Nein", address: "Štefánikova 230/7, 150 00 Prag", desc: "Burritos.", img: "burritolo.jpg" },
             { id: "p_f22", city: "Prag", cat: "Essen", subtag: "casual", title: "Bistro Monk", cost: 30, time: "1h", res: "Empfohlen", address: "Michalská 20, 110 00 Prag", desc: "Sehr beliebtes Frühstück.", img: "bistromo.jpg" },
             { id: "p_f23", city: "Prag", cat: "Essen", subtag: "casual", title: "Venue", cost: 30, time: "1h", res: "Nein", address: "Havelská 4, 110 00 Prag", desc: "Tolle Brunch-Teller.", img: "venue.jpg" },
-            { id: "p_f24", city: "Prag", cat: "Essen", subtag: "street", title: "Bakeshop", cost: 25, time: "30min", res: "Nein", address: "Kozí 1, 110 00 Prag", desc: "Dlouhá Straße. Backwaren.", img: "bakeshop.jpg" },
+            { id: "p_f24", city: "Prag", cat: "Essen", subtag: "street", title: "Bakeshop", cost: 25, time: "30min", res: "Nein", address: "Kozí 1, 110 00 Prag", desc: "Bäckerei.", img: "bakeshop.jpg" },
             { id: "p_f25", city: "Prag", cat: "Essen", subtag: "fine", title: "Café Savoy", cost: 40, time: "1.5h", res: "Empfohlen", address: "Vítězná 5, 150 00 Prag", desc: "Imperial.", img: "cafsa.jpg" },
             { id: "p_f26", city: "Prag", cat: "Essen", subtag: "street", title: "Super Tramp Coffee", cost: 10, time: "30min", res: "Nein", address: "Opatovická 160/18, 110 00 Prag", desc: "Kaffee.", img: "supertr.jpg" },
             { id: "p_f27", city: "Prag", cat: "Essen", subtag: "street", title: "Coffee Room", cost: 15, time: "45min", res: "Nein", address: "Korunní 74, 101 00 Prag", desc: "Avocado Toast.", img: "coffeero.jpg" },
@@ -318,15 +313,13 @@
                     const p = (elapsed / totalDuration) * 100;
                     setProgress(p);
 
-                    // Determine segment
                     const day = now.getDate();
-                    if (day < 4) setCurrentSegment(1); // Bud
-                    else if (day < 7) setCurrentSegment(2); // Vie
-                    else setCurrentSegment(3); // Prg
+                    if (day < 4) setCurrentSegment(1); 
+                    else if (day < 7) setCurrentSegment(2); 
+                    else setCurrentSegment(3); 
                 }
             }, []);
 
-            // Segments: 0-33% (Bud), 33-66% (Vie), 66-100% (Prg)
             const getSegmentColor = (index) => {
                 if (index === 1) return "bg-rose-400";
                 if (index === 2) return "bg-amber-400";
@@ -340,25 +333,20 @@
             };
 
             return (
-                <div className="w-full bg-white/50 border-b border-rose-100 p-4 sticky top-[72px] z-30 shadow-sm backdrop-blur-md">
+                <div className="w-full bg-white/50 border-b border-rose-100 p-4 sticky top-[72px] z-30 shadow-sm backdrop-blur-md hidden md:block">
                     <div className="max-w-4xl mx-auto relative pt-6 pb-2">
-                        {/* Track Background */}
                         <div className="absolute top-0 left-0 w-full h-2 bg-slate-200 rounded-full overflow-hidden flex">
-                            {/* Budapest Segment (0-33%) */}
                             <div className="w-1/3 h-full relative border-r border-white/50">
                                 <div className={`h-full ${getSegmentColor(1)}`} style={{width: `${getFillWidth(0, 33.3)}%`}}></div>
                             </div>
-                            {/* Wien Segment (33-66%) */}
                             <div className="w-1/3 h-full relative border-r border-white/50">
                                 <div className={`h-full ${getSegmentColor(2)}`} style={{width: `${getFillWidth(33.3, 66.6)}%`}}></div>
                             </div>
-                            {/* Prag Segment (66-100%) */}
                             <div className="w-1/3 h-full relative">
                                 <div className={`h-full ${getSegmentColor(3)}`} style={{width: `${getFillWidth(66.6, 100)}%`}}></div>
                             </div>
                         </div>
 
-                        {/* Beer Indicator */}
                         <div 
                             className="absolute top-[-14px] text-2xl transition-all duration-1000 ease-linear beer-cursor z-10" 
                             style={{ left: `calc(${progress}% - 12px)` }}
@@ -366,36 +354,22 @@
                             🍺
                         </div>
 
-                        {/* Labels & Icons */}
                         <div className="flex justify-between text-[10px] font-bold text-slate-400 mt-3 uppercase tracking-wide relative">
-                            {/* Start */}
                             <div className="flex flex-col items-center absolute left-0 -ml-4">
                                 <span className="text-lg">🛬</span>
                                 <span>Mi 01.04.</span>
                             </div>
-                            
-                            {/* Bud Center */}
                             <div className="absolute left-[16.5%] -ml-2 text-lg opacity-50">🇭🇺</div>
-
-                            {/* Transfer 1 */}
                             <div className="flex flex-col items-center absolute left-[33.3%] -ml-4">
                                 <span className="text-lg">🚂</span>
                                 <span>Sa 04.04.</span>
                             </div>
-
-                            {/* Vie Center */}
                             <div className="absolute left-[50%] -ml-2 text-lg opacity-50">🇦🇹</div>
-
-                            {/* Transfer 2 */}
                             <div className="flex flex-col items-center absolute left-[66.6%] -ml-4">
                                 <span className="text-lg">🚂</span>
                                 <span>Di 07.04.</span>
                             </div>
-
-                            {/* Prg Center */}
                             <div className="absolute left-[83.5%] -ml-2 text-lg opacity-50">🇨🇿</div>
-
-                            {/* End */}
                             <div className="flex flex-col items-center absolute right-0 -mr-4">
                                 <span className="text-lg">🏁</span>
                                 <span>Fr 10.04.</span>
@@ -494,11 +468,9 @@
                         return bMatch - aMatch;
                     });
 
-                    // Fallback to City Only if no category match (e.g. unique items)
                     if (matches.length === 0) {
-                        matches = DB.filter(i => i.city === currentItem.city && i.id !== currentItem.id);
+                        matches = DB.filter(i => i.cat === currentItem.cat && i.id !== currentItem.id);
                     }
-
                     setAlternatives(matches.slice(0, 4));
                 }
             }, [isOpen, currentItem]);
@@ -552,6 +524,69 @@
                 </div>
             );
         };
+        
+        const TripCalendar = () => {
+            const initialDays = Array.from({ length: 10 }, (_, i) => {
+                const date = new Date(2026, 3, 1 + i); 
+                const dayStr = date.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' });
+                let city = "Budapest 🇭🇺";
+                if (i >= 3 && i < 6) city = "Wien 🇦🇹";
+                if (i >= 6) city = "Prag 🇨🇿";
+                if (i === 3) city = "Budapest ➡️ Wien";
+                if (i === 6) city = "Wien ➡️ Prag";
+
+                return { id: i, date: dayStr, city, slots: { mor: "", aft: "", eve: "", nht: "" } };
+            });
+
+            const [days, setDays] = useState(() => {
+                const saved = localStorage.getItem('trip_calendar');
+                return saved ? JSON.parse(saved) : initialDays;
+            });
+
+            useEffect(() => {
+                localStorage.setItem('trip_calendar', JSON.stringify(days));
+            }, [days]);
+
+            const updateSlot = (dayId, slot, value) => {
+                setDays(prev => prev.map(d => d.id === dayId ? { ...d, slots: { ...d.slots, [slot]: value } } : d));
+            };
+
+            return (
+                <div className="p-4 pb-20 fade-in">
+                    <h2 className="text-xl font-bold mb-6 text-center text-rose-900">Dein Reiseplan 📅</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                        {days.map(day => (
+                            <div key={day.id} className="bg-white rounded-xl shadow-sm border border-rose-100 overflow-hidden flex flex-col">
+                                <div className="bg-rose-50 p-2 text-center border-b border-rose-100">
+                                    <div className="font-bold text-rose-800">{day.date}</div>
+                                    <div className="text-[10px] text-slate-500 uppercase tracking-wide">{day.city}</div>
+                                </div>
+                                <div className="p-2 space-y-2 flex-1">
+                                    <textarea 
+                                        placeholder="Morgen..." 
+                                        className="w-full text-xs p-2 bg-slate-50 rounded border border-slate-100 resize-none h-16 focus:border-rose-300 outline-none"
+                                        value={day.slots.mor}
+                                        onChange={(e) => updateSlot(day.id, 'mor', e.target.value)}
+                                    />
+                                    <textarea 
+                                        placeholder="Nachmittag..." 
+                                        className="w-full text-xs p-2 bg-slate-50 rounded border border-slate-100 resize-none h-16 focus:border-rose-300 outline-none"
+                                        value={day.slots.aft}
+                                        onChange={(e) => updateSlot(day.id, 'aft', e.target.value)}
+                                    />
+                                    <textarea 
+                                        placeholder="Abend..." 
+                                        className="w-full text-xs p-2 bg-slate-50 rounded border border-slate-100 resize-none h-16 focus:border-rose-300 outline-none"
+                                        value={day.slots.eve}
+                                        onChange={(e) => updateSlot(day.id, 'eve', e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
 
         const Card = ({ item, onShowAlternatives, toggleFav, isFav }) => {
             const [showLocal, setShowLocal] = useState(false);
@@ -588,7 +623,7 @@
                 const val = (item.cost * rate).toLocaleString(undefined, {maximumFractionDigits: 0});
                 return `${val} ${currency}`;
             };
-
+            
             let themeClass = "border-slate-200";
             let btnClass = "bg-slate-900 hover:bg-slate-800";
             if (item.city === "Budapest") { themeClass = "border-rose-200"; btnClass = "bg-rose-600 hover:bg-rose-700"; }
@@ -596,10 +631,10 @@
             if (item.city === "Prag") { themeClass = "border-emerald-200"; btnClass = "bg-emerald-600 hover:bg-emerald-700"; }
             if (item.city === "Transfer") { themeClass = "border-indigo-200"; btnClass = "bg-indigo-600 hover:bg-indigo-700"; }
 
+
             return (
                 <div className={`bg-white rounded-2xl shadow-sm border ${themeClass} overflow-hidden card-hover flex flex-col h-full fade-in relative group`}>
                     
-                    {/* Header Image Area */}
                     <div className="h-44 relative bg-slate-100 overflow-hidden">
                         {!imgError && item.img ? (
                             <img src={imagePath} alt={item.title} className="w-full h-full object-cover transition-opacity duration-300" onError={() => setImgError(true)} />
@@ -674,12 +709,13 @@
         };
 
         const App = () => {
+            const [view, setView] = useState('hub');
+            const [isMenuOpen, setIsMenuOpen] = useState(false);
             const [cityFilter, setCityFilter] = useState("Budapest");
             const [catFilter, setCatFilter] = useState("Alle");
             const [modalOpen, setModalOpen] = useState(false);
             const [modalItem, setModalItem] = useState(null);
             
-            // Fix: Persistent Favs with correct default state
             const [favs, setFavs] = useState(() => {
                 try {
                     const saved = localStorage.getItem('trip_favs');
@@ -695,7 +731,6 @@
                 setFavs(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
             };
 
-            // Fix: Correct filtering for Favs tab
             const filteredDB = useMemo(() => {
                 if (cityFilter === 'Favs') {
                     return DB.filter(item => favs.includes(item.id));
@@ -712,85 +747,118 @@
                 setModalOpen(true);
             };
 
-            // Trip Progress Logic
-            const [progress, setProgress] = useState(0);
-            const [daysLeft, setDaysLeft] = useState(0);
-            useEffect(() => {
-                const start = new Date('2026-04-01T00:00:00').getTime();
-                const end = new Date('2026-04-10T23:59:59').getTime();
-                const now = new Date().getTime(); 
-                
-                const diff = start - now;
-                setDaysLeft(Math.ceil(diff / (1000 * 60 * 60 * 24)));
-
-                if (now < start) setProgress(0);
-                else if (now > end) setProgress(100);
-                else {
-                    const total = end - start;
-                    const current = now - start;
-                    setProgress((current / total) * 100);
-                }
-            }, []);
+            const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
             return (
                 <div className="min-h-screen max-w-7xl mx-auto pb-20">
-                    <header className="bg-white/80 backdrop-blur-md p-4 sticky top-0 z-50 border-b border-slate-200 rounded-b-3xl shadow-sm mb-6">
+                    <header className="bg-white/90 backdrop-blur-md p-4 sticky top-0 z-50 border-b border-rose-100 shadow-sm mb-6">
                         <div className="flex flex-col gap-4 max-w-7xl mx-auto">
-                            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                                <div>
-                                    <h1 className="text-xl font-bold tracking-tighter text-rose-900 flex items-center gap-2">
-                                        Bingus & Amor <span className="bg-rose-100 text-rose-600 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-widest">Trip 2026</span>
-                                    </h1>
+                            <div className="flex flex-row justify-between items-center gap-4">
+                                <h1 className="text-xl font-bold tracking-tighter text-rose-900 flex items-center gap-2">
+                                    Bingus & Amor <span className="bg-rose-100 text-rose-600 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-widest">Trip 2026</span>
+                                </h1>
+                                
+                                <div className="hidden md:block">
+                                   <CurrencyConverter />
                                 </div>
-                                <CurrencyConverter />
+                                
+                                <button className="md:hidden p-2" onClick={toggleMenu}>
+                                    <Icon name={isMenuOpen ? "x" : "menu"} className="w-6 h-6 text-slate-700"/>
+                                </button>
                             </div>
-                            
-                            <div className="flex justify-between items-center overflow-x-auto w-full gap-2 pb-1 no-scrollbar">
-                                <div className="flex bg-rose-50 p-1 rounded-xl">
-                                    {["Budapest", "Transfer", "Wien", "Prag"].map(c => (
-                                        <button key={c} onClick={() => { setCityFilter(c); setCatFilter("Alle"); }} className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all whitespace-nowrap ${cityFilter === c ? 'bg-white text-rose-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-                                            {c === "Transfer" ? "🚄" : (c === "Budapest" ? "🇭🇺 BUD" : (c === "Wien" ? "🇦🇹 VIE" : "🇨🇿 PRG"))}
-                                        </button>
-                                    ))}
-                                    <div className="w-px h-6 bg-rose-200 mx-1 self-center"></div>
-                                    <button onClick={() => { setCityFilter("Favs"); setCatFilter("Alle"); }} className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all whitespace-nowrap ${cityFilter === "Favs" ? 'bg-rose-500 text-white shadow-lg' : 'text-rose-400 hover:text-rose-600'}`}>
-                                        ❤️ Favs ({favs.length})
-                                    </button>
+
+                            {/* Desktop Timeline - Visible on MD+ */}
+                             <div className="hidden md:block">
+                                <TripTimeline />
+                             </div>
+
+                             {/* Desktop Navigation */}
+                             <div className="hidden md:flex gap-4 items-center">
+                                 <div className="flex gap-2">
+                                    <button onClick={() => setView('hub')} className={`px-4 py-2 rounded-lg font-bold text-sm ${view === 'hub' ? 'bg-rose-50 text-rose-700' : 'text-slate-500 hover:bg-slate-50'}`}>Hub</button>
+                                    <button onClick={() => setView('calendar')} className={`px-4 py-2 rounded-lg font-bold text-sm ${view === 'calendar' ? 'bg-rose-50 text-rose-700' : 'text-slate-500 hover:bg-slate-50'}`}>Kalender</button>
+                                 </div>
+                                 <div className="h-6 w-px bg-slate-200"></div>
+                                 
+                                 {view === 'hub' && (
+                                     <div className="flex gap-2">
+                                         <button onClick={() => { setCityFilter("Favs"); setCatFilter("Alle"); }} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${cityFilter === "Favs" ? 'bg-rose-500 text-white' : 'text-slate-500 hover:bg-slate-50'}`}>❤️ Favs</button>
+                                         {["Budapest", "Transfer", "Wien", "Prag"].map(c => (
+                                             <button key={c} onClick={() => { setCityFilter(c); setCatFilter("Alle"); }} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${cityFilter === c ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-50'}`}>
+                                                 {c === "Transfer" ? "🚄" : c.substring(0,3).toUpperCase()}
+                                             </button>
+                                         ))}
+                                     </div>
+                                 )}
+                             </div>
+                        </div>
+
+                         {/* Mobile Menu */}
+                        <div className={`overflow-hidden transition-all duration-300 md:hidden ${isMenuOpen ? 'max-h-[500px] border-t border-slate-100 mt-4 pt-4' : 'max-h-0'}`}>
+                            <div className="space-y-4">
+                                <CurrencyConverter />
+                                <div className="flex justify-center gap-2">
+                                    <button onClick={() => { setView('hub'); setIsMenuOpen(false); }} className={`flex-1 py-2 rounded-lg text-sm font-bold ${view === 'hub' ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-600'}`}>Hub</button>
+                                    <button onClick={() => { setView('calendar'); setIsMenuOpen(false); }} className={`flex-1 py-2 rounded-lg text-sm font-bold ${view === 'calendar' ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-600'}`}>Kalender</button>
                                 </div>
+                                
+                                {view === 'hub' && (
+                                    <div className="space-y-3">
+                                        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                                            <button onClick={() => setCityFilter("Favs")} className={`px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap ${cityFilter === "Favs" ? 'bg-rose-500 text-white' : 'bg-rose-50 text-rose-600'}`}>❤️ Favs</button>
+                                            {["Budapest", "Transfer", "Wien", "Prag"].map(c => (
+                                                <button key={c} onClick={() => setCityFilter(c)} className={`px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap ${cityFilter === c ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                                                    {c === "Transfer" ? "🚄" : c.toUpperCase()}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        {cityFilter !== "Transfer" && cityFilter !== "Favs" && (
+                                            <div className="flex gap-2 overflow-x-auto no-scrollbar">
+                                                {["Alle", "Essen", "Aktivität", "Party"].map(cat => (
+                                                    <button key={cat} onClick={() => setCatFilter(cat)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border ${catFilter === cat ? 'bg-rose-100 border-rose-300 text-rose-700' : 'bg-white border-slate-200 text-slate-500'}`}>{cat}</button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </header>
-                    
-                    <TripTimeline />
 
-                    {cityFilter !== "Transfer" && cityFilter !== "Favs" && (
-                        <div className="px-6 py-3 bg-white/30 border-b border-slate-100 sticky top-[73px] z-40 overflow-x-auto mb-6 rounded-xl mx-4 shadow-sm backdrop-blur-sm">
+                    {/* Desktop Sub-Header for Categories (only visible if hub & city selected & not mobile menu open) */}
+                    {view === 'hub' && cityFilter !== "Transfer" && cityFilter !== "Favs" && (
+                        <div className="hidden md:block px-6 py-3 bg-white/50 border-b border-rose-100 sticky top-[138px] z-40 backdrop-blur-sm">
                             <div className="flex gap-2 justify-center md:justify-start max-w-7xl mx-auto">
                                 {["Alle", "Essen", "Aktivität", "Party"].map(cat => (
-                                    <button key={cat} onClick={() => setCatFilter(cat)} className={`px-3 py-1 rounded-full text-[11px] font-bold border transition-colors ${catFilter === cat ? 'bg-rose-900 text-white border-rose-900' : 'bg-white text-slate-500 border-slate-200 hover:border-rose-300'}`}>{cat}</button>
+                                    <button key={cat} onClick={() => setCatFilter(cat)} className={`px-4 py-1.5 rounded-full text-xs font-bold border-2 transition-all ${catFilter === cat ? 'bg-rose-900 text-white border-rose-900 shadow-md transform scale-105' : 'bg-white text-slate-500 border-slate-200 hover:border-rose-300'}`}>{cat}</button>
                                 ))}
                             </div>
                         </div>
                     )}
                     
-                    <main className="p-6 max-w-7xl mx-auto">
-                        {filteredDB.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                                {filteredDB.map(item => (
-                                    <Card 
-                                        key={item.id} 
-                                        item={item} 
-                                        onShowAlternatives={handleShowAlternatives} 
-                                        toggleFav={toggleFav}
-                                        isFav={favs.includes(item.id)}
-                                    />
-                                ))}
+                    <main className="max-w-7xl mx-auto">
+                        {view === 'hub' ? (
+                            <div className="p-4">
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                                    {filteredDB.map(item => (
+                                        <Card 
+                                            key={item.id} 
+                                            item={item} 
+                                            onShowAlternatives={handleShowAlternatives} 
+                                            toggleFav={toggleFav}
+                                            isFav={favs.includes(item.id)}
+                                        />
+                                    ))}
+                                </div>
+                                {filteredDB.length === 0 && (
+                                    <div className="text-center py-20 text-rose-300 flex flex-col items-center">
+                                        <Icon name="heart-crack" className="w-12 h-12 mb-2 opacity-50"/>
+                                        <p>Keine Einträge gefunden.</p>
+                                    </div>
+                                )}
                             </div>
                         ) : (
-                            <div className="text-center py-32 flex flex-col items-center justify-center opacity-50">
-                                <Icon name="heart" className="w-16 h-16 text-rose-300 mb-4"/>
-                                <p className="text-rose-400 font-bold">Noch keine Favoriten oder Einträge.</p>
-                            </div>
+                            <TripCalendar />
                         )}
                     </main>
 
