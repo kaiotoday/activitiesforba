@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Activity Hub: BUD • VIE • PRG</title>
+    <title>Bingus & Amor's Trip ✨</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -16,38 +16,41 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Google Fonts: Quicksand for maximum cuteness -->
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; }
+        body { 
+            font-family: 'Quicksand', sans-serif; 
+            background: linear-gradient(135deg, #fff1f2 0%, #fff7ed 100%); /* Rose to Orange tint */
+            color: #4c0519; /* Rose-950 */
+            min-height: 100vh;
+        }
         
-        /* Animations */
-        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
         
-        .modal-enter { animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        @keyframes modalIn { from { opacity: 0; transform: scale(0.98) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .modal-enter { animation: modalPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        @keyframes modalPop { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
         
-        /* Badges */
+        /* Cuter Badges */
         .badge-res-high { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
         .badge-res-med { background-color: #ffedd5; color: #9a3412; border: 1px solid #fed7aa; }
         .badge-res-low { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
         
         .upload-area {
-            background-color: #f1f5f9;
-            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='8' ry='8' stroke='%23CBD5E1FF' stroke-width='2' stroke-dasharray='8%2c 8' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
-            transition: all 0.2s ease;
+            background-color: #fff0f5; /* Lavender blush */
+            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='16' ry='16' stroke='%23FDA4AF' stroke-width='2' stroke-dasharray='12%2c 12' stroke-dashoffset='0' stroke-linecap='round'/%3e%3c/svg%3e");
+            transition: all 0.3s ease;
         }
-        .upload-area:hover { background-color: #e2e8f0; cursor: pointer; }
+        .upload-area:hover { background-color: #ffe4e6; cursor: pointer; transform: scale(0.98); }
 
-        /* Image Placeholder (Fallback) */
         .img-fallback {
-            background-color: #e2e8f0;
+            background-color: #ffe4e6;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #94a3b8;
+            color: #fb7185;
             font-weight: 700;
             font-size: 1.5rem;
             letter-spacing: 0.05em;
@@ -55,10 +58,13 @@
             height: 100%;
         }
         
-        .custom-scroll::-webkit-scrollbar { width: 6px; }
-        .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .custom-scroll::-webkit-scrollbar { width: 8px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #fda4af; border-radius: 20px; border: 2px solid #fff1f2; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #fb7185; }
+
+        /* Smooth shadow for cards */
+        .cute-shadow { box-shadow: 0 10px 40px -10px rgba(251, 113, 133, 0.15); }
     </style>
 </head>
 <body>
@@ -67,11 +73,10 @@
     <script type="text/babel">
         const { useState, useMemo, useRef, useEffect } = React;
 
-        // --- DATENBANK (Gemappt auf deine Dateinamen) ---
+        // --- DATENBANK (Inhalt identisch, nur Design ändert sich) ---
         const DB = [
             // --- TRANSFER ---
             { id: "t1", city: "Transfer", cat: "Transport", subtag: "train", title: "RegioJet Business Class", cost: 40, time: "2h 40min", res: "Zwingend", address: "Budapest-Keleti, 1087 Budapest", desc: "Route: Budapest -> Wien. 4er-Abteil, Ledersessel. Gratis Sekt/Kaffee.", img: "regiojetbu.jpg" },
-            // ÖBB nutzt RegioJet Bild als Fallback, da kein eigenes in der Liste
             { id: "t2", city: "Transfer", cat: "Transport", subtag: "train", title: "ÖBB Railjet Business", cost: 80, time: "4h 05min", res: "Zwingend", address: "Wien Hbf, 1100 Wien", desc: "Route: Wien -> Prag. Upgrade zur 1. Klasse. Extrem ruhig.", img: "regiojetbu.jpg" },
 
             // --- BUDAPEST ESSEN ---
@@ -212,8 +217,8 @@
             { id: "p_f13", city: "Prag", cat: "Essen", subtag: "casual", title: "The Tavern", cost: 25, time: "1h", res: "Nein", address: "Chopinova 26, 120 00 Prag", desc: "Burger.", img: "theta.jpg" },
             { id: "p_f14", city: "Prag", cat: "Essen", subtag: "casual", title: "Kro Kitchen", cost: 25, time: "1h", res: "Nein", address: "Vinohradská 66, 130 00 Prag", desc: "Rotisserie.", img: "kroki.jpg" },
             { id: "p_f15", city: "Prag", cat: "Essen", subtag: "casual", title: "T-Anker", cost: 30, time: "1.5h", res: "Empfohlen", address: "Náměstí Republiky 8, 110 00 Prag", desc: "Dachterrasse.", img: "tanker.jpg" },
-            { id: "p_f16", city: "Prag", cat: "Essen", subtag: "casual", title: "Vinohradský Parlament", cost: 30, time: "1.5h", res: "Empfohlen", address: "Korunní 1, 120 00 Prag", desc: "Knödel.", img: "vinohradskpa.jpg" },
-            { id: "p_f17", city: "Prag", cat: "Essen", subtag: "casual", title: "Las Adelitas", cost: 30, time: "1.5h", res: "Empfohlen", address: "Americká 8, 120 00 Prag", desc: "Mexikaner.", img: "lasad.jpg" },
+            { id: "p_f16", city: "Prag", cat: "Essen", subtag: "casual", title: "Vinohradský Parlament", cost: 30, time: "1.5h", res: "Empfohlen", address: "Korunní 1, 120 00 Prag", desc: "Gute Knödelgerichte.", img: "vinohradskpa.jpg" },
+            { id: "p_f17", city: "Prag", cat: "Essen", subtag: "casual", title: "Las Adelitas", cost: 30, time: "1.5h", res: "Empfohlen", address: "Americká 8, 120 00 Prag", desc: "Guter Mexikaner.", img: "lasad.jpg" },
             { id: "p_f18", city: "Prag", cat: "Essen", subtag: "street", title: "Mr. HotDog", cost: 20, time: "1h", res: "Nein", address: "Kamenická 24, 170 00 Prag", desc: "Hotdogs.", img: "mrho.jpg" },
             { id: "p_f19", city: "Prag", cat: "Essen", subtag: "street", title: "Sisters Bistro", cost: 15, time: "30min", res: "Nein", address: "Dlouhá 39, 110 00 Prag", desc: "Brötchen.", img: "sistersbi.jpg" },
             { id: "p_f20", city: "Prag", cat: "Essen", subtag: "street", title: "Bageterie Boulevard", cost: 10, time: "15min", res: "Nein", address: "Václavské nám. 56, 110 00 Prag", desc: "Baguettes.", img: "bageteriebo.jpg" },
@@ -230,12 +235,12 @@
             // --- PRAG AKTIVITÄT ---
             { id: "p_a1", city: "Prag", cat: "Aktivität", subtag: "relax", title: "Bier Spa Bernard", cost: 90, time: "1h", res: "Zwingend", address: "Týn 10, 110 00 Prag", desc: "Baden in Bier.", img: "biersp.jpg" },
             { id: "p_a2", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Nuklearbunker Tour", cost: 25, time: "2h", res: "Ticket", address: "Václavské nám. 45 (Hotel Jalta), 110 00 Prag", desc: "Ex-Sowjet Bunker.", img: "nuklearbunkerto.jpg" },
-            { id: "p_a3", city: "Prag", cat: "Aktivität", subtag: "relax", title: "Tretboot fahren", cost: 20, time: "1h", res: "Nein", address: "Slovanský ostrov, 110 00 Prag", desc: "Moldau Insel.", img: "tretbootfa.jpg" },
-            { id: "p_a4", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Museum of Fantastic Illusions", cost: 15, time: "1h", res: "Nein", address: "Vodičkova 31, 110 00 Prag", desc: "Lustige Fotos.", img: "museumofprag.jpg" },
-            { id: "p_a5", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Altstädter Brückenturm", cost: 10, time: "45min", res: "Nein", address: "Karlův most, 110 00 Prag", desc: "Aussicht.", img: "altstdterbr.jpg" },
+            { id: "p_a3", city: "Prag", cat: "Aktivität", subtag: "relax", title: "Tretboot fahren", cost: 20, time: "1h", res: "Nein", address: "Slovanský ostrov, 110 00 Prag", desc: "Auf der Moldau (Slovanský Insel).", img: "tretbootfa.jpg" },
+            { id: "p_a4", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Museum of Fantastic Illusions", cost: 15, time: "1h", res: "Nein", address: "Vodičkova 31, 110 00 Prag", desc: "Lustige Fotos.", img: "museumofprag.jpg" }, // Mapped to prag version
+            { id: "p_a5", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Altstädter Brückenturm", cost: 10, time: "45min", res: "Nein", address: "Karlův most, 110 00 Prag", desc: "Aufstieg für den Karlsbrücke-Blick.", img: "altstdterbr.jpg" },
             { id: "p_a6", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Museum des Kommunismus", cost: 15, time: "1.5h", res: "Nein", address: "V Celnici 1031/4, 110 00 Prag", desc: "Geschichte der CSSR.", img: "museumde.jpg" },
             { id: "p_a7", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Paternoster Aufzug", cost: 0, time: "15min", res: "Nein", address: "Mariánské nám. 2, 110 00 Prag", desc: "Im Rathaus. Aufzug ohne Türen.", img: "paternosterau.jpg" },
-            { id: "p_a8", city: "Prag", cat: "Aktivität", subtag: "culture", title: "DOX Centre for Art", cost: 20, time: "2h", res: "Nein", address: "Poupětova 1, 170 00 Prag", desc: "Holešovice. Luftschiff auf dem Dach.", img: "doxce.jpg" },
+            { id: "p_a8", city: "Prag", cat: "Aktivität", subtag: "culture", title: "DOX Centre for Art", cost: 20, time: "2h", res: "Nein", address: "Poupětova 1, 170 00 Prag", desc: "Luftschiff.", img: "doxce.jpg" },
             { id: "p_a9", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Magical Cavern", cost: 10, time: "45min", res: "Nein", address: "Petřín, 118 00 Prag", desc: "Psychedelisch.", img: "magicalca.jpg" },
             { id: "p_a10", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Idiom Installation", cost: 0, time: "15min", res: "Nein", address: "Mariánské nám. 1, 110 00 Prag", desc: "Unendlicher Bücherturm in der Bibliothek.", img: "idiomin.jpg" },
             { id: "p_a11", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Fernsehturm Žižkov", cost: 15, time: "1h", res: "Nein", address: "Mahlerovy sady 1, 130 00 Prag", desc: "Babys.", img: "fernsehturmik.jpg" },
@@ -257,8 +262,6 @@
             { id: "p_p8", city: "Prag", cat: "Party", subtag: "club", title: "Paul Simon Konzert", cost: 90, time: "Event", res: "Ticket", address: "Kongresszentrum, Prag", desc: "Konzert.", img: "" }, 
             { id: "p_p9", city: "Prag", cat: "Party", subtag: "club", title: "Epic Prague", cost: 25, time: "Bis 05:00", res: "Ticket", address: "Revoluční 1003/3, 110 00 Prag", desc: "EDM.", img: "epicpr.jpg" }
         ];
-
-        // --- HELPER COMPONENTS ---
 
         const Icon = ({ name, className }) => {
             React.useEffect(() => {
@@ -287,7 +290,6 @@
                     if (matches.length === 0) {
                         matches = DB.filter(i => i.cat === currentItem.cat && i.id !== currentItem.id);
                     }
-
                     setAlternatives(matches.slice(0, 4));
                 }
             }, [isOpen, currentItem]);
@@ -302,12 +304,10 @@
             return (
                 <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-sm modal-enter" onClick={onClose}>
                     <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto shadow-2xl p-6 relative" onClick={e => e.stopPropagation()}>
-                        
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-xl font-bold text-slate-900">Alternativen zu "{currentItem.title}"</h2>
                             <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full"><Icon name="x" className="w-6 h-6"/></button>
                         </div>
-
                         <div className="space-y-4 mb-6">
                             {alternatives.length > 0 ? alternatives.map(alt => (
                                 <div key={alt.id} className="border border-slate-200 rounded-xl p-4 bg-slate-50 flex flex-col hover:border-indigo-300 transition-colors">
@@ -325,11 +325,7 @@
                                 <p className="text-slate-400 text-center text-sm">Keine direkten Datenbank-Alternativen gefunden.</p>
                             )}
                         </div>
-
-                        <button 
-                            onClick={openWebSearch}
-                            className="w-full py-3 bg-indigo-50 text-indigo-700 text-sm font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-indigo-100 transition-colors border border-indigo-100"
-                        >
+                        <button onClick={openWebSearch} className="w-full py-3 bg-indigo-50 text-indigo-700 text-sm font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-indigo-100 transition-colors border border-indigo-100">
                             <Icon name="search" className="w-4 h-4"/> 
                             Google nach weiteren Alternativen fragen
                         </button>
@@ -423,10 +419,10 @@
                 <div className="min-h-screen max-w-7xl mx-auto pb-20">
                     <header className="bg-white/80 backdrop-blur-md p-4 sticky top-0 z-50 border-b border-slate-200">
                         <div className="flex flex-col md:flex-row justify-between items-center gap-4 max-w-7xl mx-auto">
-                            <div><h1 className="text-xl font-black tracking-tighter text-slate-900 flex items-center gap-2">ACTIVITY HUB <span className="bg-amber-400 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">KAIO</span></h1></div>
+                            <div><h1 className="text-xl font-black tracking-tighter text-slate-900 flex items-center gap-2">Bingus & Amor's Adventure Hub ✨</h1></div>
                             <div className="flex bg-slate-100 p-1 rounded-lg overflow-x-auto">
                                 {cities.map(c => (
-                                    <button key={c} onClick={() => { setCityFilter(c); setCatFilter("Alle"); }} className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all whitespace-nowrap ${cityFilter === c ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>{c === "Transfer" ? "🚄 Transfer" : c}</button>
+                                    <button key={c} onClick={() => { setCityFilter(c); setCatFilter("Alle"); }} className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all whitespace-nowrap ${cityFilter === c ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>{c === "Transfer" ? "🚄 Transfer" : (c === "Budapest" ? "Budapest 🇭🇺" : (c === "Wien" ? "Wien 🇦🇹" : "Prag 🇨🇿"))}</button>
                                 ))}
                             </div>
                         </div>
