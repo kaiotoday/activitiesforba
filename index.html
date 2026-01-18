@@ -22,6 +22,7 @@
     <style>
         body { 
             font-family: 'Quicksand', sans-serif; 
+            /* Lebendiger Hintergrund */
             background-color: #fff1f2;
             background-image: 
                 radial-gradient(at 10% 10%, rgba(253, 164, 175, 0.2) 0px, transparent 50%), 
@@ -47,10 +48,19 @@
         .card-hover { transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
         .card-hover:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 20px 40px -10px rgba(251, 113, 133, 0.25); z-index: 10; }
 
+        /* Image Handling */
+        .upload-area {
+            background-color: #fff0f5; 
+            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='16' ry='16' stroke='%23FDA4AF' stroke-width='2' stroke-dasharray='12%2c 12' stroke-dashoffset='0' stroke-linecap='round'/%3e%3c/svg%3e");
+            transition: all 0.3s ease;
+        }
+        .upload-area:hover { background-color: #ffe4e6; cursor: pointer; transform: scale(0.98); }
+
+        /* Fallback: Removed the text placeholder, now just subtle background */
         .img-fallback {
-            background-color: #ffe4e6;
+            background-color: #fff0f5;
             display: flex; align-items: center; justify-content: center;
-            color: #fb7185; font-weight: 700; font-size: 1.5rem; letter-spacing: 0.05em;
+            color: #fecdd3; 
             width: 100%; height: 100%;
         }
         
@@ -77,7 +87,7 @@
             'CZK': 26    // 1 CHF = 26 CZK
         };
 
-        // --- DATENBANK ---
+        // --- DATENBANK (Bilder jetzt OHNE "images/" Prefix) ---
         const DB = [
              { id: "t1", city: "Transfer", cat: "Transport", subtag: "train", title: "RegioJet Business Class", cost: 40, time: "2h 40min", res: "Zwingend", address: "Budapest-Keleti, 1087 Budapest", desc: "Route: Budapest -> Wien. 4er-Abteil, Ledersessel. Gratis Sekt/Kaffee.", img: "regiojetbu.jpg" },
             { id: "t2", city: "Transfer", cat: "Transport", subtag: "train", title: "ÖBB Railjet Business", cost: 80, time: "4h 05min", res: "Zwingend", address: "Wien Hbf, 1100 Wien", desc: "Route: Wien -> Prag. Upgrade zur 1. Klasse. Extrem ruhig.", img: "regiojetbu.jpg" },
@@ -108,8 +118,6 @@
             { id: "b_f25", city: "Budapest", cat: "Essen", subtag: "street", title: "Crudo Pizza", cost: 25, time: "1h", res: "Nein", address: "Fehér Hajó u. 2-6, 1052 Ungarn", desc: "Pizza & Wine.", img: "crudopi.jpg" },
             { id: "b_f26", city: "Budapest", cat: "Essen", subtag: "street", title: "Fluffy and me Pancake", cost: 20, time: "45min", res: "Nein", address: "Kazinczy u. 52 C, 1075 Ungarn", desc: "Fluffige japanische Pancakes.", img: "fluffyan.jpg" },
             { id: "b_f27", city: "Budapest", cat: "Essen", subtag: "street", title: "McDonalds Nyugati", cost: 15, time: "30min", res: "Nein", address: "Teréz krt. 55, 1062 Ungarn", desc: "Der schönste McDonalds der Welt.", img: "mcdonaldsny.jpg" },
-
-            // --- BUDAPEST AKTIVITÄT ---
             { id: "b_a1", city: "Budapest", cat: "Aktivität", subtag: "culture", title: "House of Terror", cost: 15, time: "2h", res: "Nein", address: "Andrássy út 60, 1062 Ungarn", desc: "Museum Nazi- & Sowjetzeit.", img: "houseof.jpg" },
             { id: "b_a2", city: "Budapest", cat: "Aktivität", subtag: "relax", title: "Mandala Day Spa", cost: 100, time: "3h+", res: "Zwingend", address: "Ipoly u. 8, 1133 Ungarn", desc: "Luxus pur, Massagen.", img: "mandalada.jpg" },
             { id: "b_a3", city: "Budapest", cat: "Aktivität", subtag: "culture", title: "Chimney Cake Workshop", cost: 35, time: "1.5h", res: "Zwingend", address: "Rákóczi út 73, 1088 Ungarn", desc: "Kürtőskalács selber backen.", img: "chimneyca.jpg" },
@@ -130,8 +138,6 @@
             { id: "b_a18", city: "Budapest", cat: "Aktivität", subtag: "relax", title: "Rudas Bad", cost: 35, time: "3h", res: "Nein", address: "Döbrentei tér 9, 1013 Ungarn", desc: "Türkisches Bad.", img: "rudasba.jpg" },
             { id: "b_a19", city: "Budapest", cat: "Aktivität", subtag: "relax", title: "Lukács Bad", cost: 25, time: "3h", res: "Nein", address: "Frankel Leó út 25-29, 1023 Ungarn", desc: "Favorit der Einheimischen.", img: "lukcsba.jpg" },
             { id: "b_a20", city: "Budapest", cat: "Aktivität", subtag: "relax", title: "Palatinus Strand", cost: 20, time: "4h", res: "Nein", address: "Margitsziget, 1007 Ungarn", desc: "Freibad Margareteninsel.", img: "palatinusst.jpg" },
-
-            // --- BUDAPEST PARTY ---
             { id: "b_p1", city: "Budapest", cat: "Party", subtag: "bar", title: "Szimpla Kert", cost: 15, time: "Open End", res: "Nein", address: "Kazinczy u. 14, 1075 Ungarn", desc: "Muss sein. Ruinenbar.", img: "szimplake.jpg" },
             { id: "b_p2", city: "Budapest", cat: "Party", subtag: "club", title: "Instant-Fogas", cost: 10, time: "Bis 06:00", res: "Nein", address: "Akácfa u. 49-51, 1073 Ungarn", desc: "Riesiges Labyrinth, 7 Floors.", img: "instantfogas.jpg" },
             { id: "b_p3", city: "Budapest", cat: "Party", subtag: "bar", title: "Hotsy Totsy", cost: 40, time: "2h", res: "Empfohlen", address: "Síp u. 24, 1075 Ungarn", desc: "High-End Cocktails.", img: "hotsyto.jpg" },
@@ -144,8 +150,6 @@
             { id: "b_p10", city: "Budapest", cat: "Party", subtag: "bar", title: "Csendes Létterem", cost: 15, time: "2h", res: "Nein", address: "Ferenczy István u. 5, 1053 Ungarn", desc: "Surreale Vintage-Bar.", img: "csendeslt.jpg" },
             { id: "b_p11", city: "Budapest", cat: "Party", subtag: "bar", title: "Élesztőház", cost: 20, time: "2h", res: "Nein", address: "Tűzoltó u. 22, 1094 Ungarn", desc: "Ruinen-Pub für Craft Beer.", img: "leszthz.jpg" },
             { id: "b_p12", city: "Budapest", cat: "Party", subtag: "bar", title: "Madhouse", cost: 25, time: "2h", res: "Nein", address: "Anker köz 1-3, 1061 Ungarn", desc: "Bistro der Mad Scientist Brauerei.", img: "madhouse.jpg" },
-
-            // --- WIEN ESSEN ---
             { id: "w_f1", city: "Wien", cat: "Essen", subtag: "casual", title: "Schwarzes Kameel", cost: 35, time: "1h", res: "Nein", address: "Bognergasse 5, 1010 Wien", desc: "MUST-DO. Stehbuffet, Brötchen & Wein. Society Treff.", img: "schwarzeska.jpg" },
             { id: "w_f2", city: "Wien", cat: "Essen", subtag: "casual", title: "Figlmüller", cost: 45, time: "1.5h", res: "Zwingend", address: "Wollzeile 5, 1010 Wien", desc: "Heimat des Schnitzels.", img: "figlmller.jpg" },
             { id: "w_f3", city: "Wien", cat: "Essen", subtag: "casual", title: "Naschmarkt (NENI)", cost: 35, time: "1.5h", res: "Empfohlen", address: "Naschmarkt 510, 1060 Wien", desc: "Israelisch am Markt.", img: "naschmarkt.jpg" },
@@ -172,8 +176,6 @@
             { id: "w_f24", city: "Wien", cat: "Essen", subtag: "casual", title: "1500 Foodmakers", cost: 40, time: "1.5h", res: "Empfohlen", address: "Museumstraße 9, 1070 Wien", desc: "Im 25hours Hotel.", img: "1500fo.jpg" },
             { id: "w_f25", city: "Wien", cat: "Essen", subtag: "fine", title: "Motto am Fluss", cost: 50, time: "2h", res: "Empfohlen", address: "Franz-Josefs-Kai 2, 1010 Wien", desc: "Schiff-Design.", img: "mottoam.jpg" },
             { id: "w_f26", city: "Wien", cat: "Essen", subtag: "casual", title: "Ramien", cost: 30, time: "1h", res: "Nein", address: "Gumpendorfer Str. 9, 1060 Wien", desc: "Asiatisch.", img: "ramien.jpg" },
-
-            // --- WIEN AKTIVITÄT ---
             { id: "w_a1", city: "Wien", cat: "Aktivität", subtag: "culture", title: "Albertina", cost: 20, time: "2h", res: "Nein", address: "Albertinaplatz 1, 1010 Wien", desc: "Prunkräume & Kunst.", img: "albertina.jpg" },
             { id: "w_a2", city: "Wien", cat: "Aktivität", subtag: "culture", title: "Hundertwasserhaus", cost: 0, time: "30min", res: "Nein", address: "Kegelgasse 36-38, 1030 Wien", desc: "Architektur Fotos.", img: "hundertwasserhaus.jpg" },
             { id: "w_a3", city: "Wien", cat: "Aktivität", subtag: "relax", title: "Prater", cost: 30, time: "3h", res: "Nein", address: "1020 Wien", desc: "Vergnügungspark.", img: "prater.jpg" },
@@ -190,8 +192,6 @@
             { id: "w_a14", city: "Wien", cat: "Aktivität", subtag: "culture", title: "Haus der Musik", cost: 15, time: "1.5h", res: "Nein", address: "Seilerstätte 30, 1010 Wien", desc: "Interaktiv.", img: "hausdermusik.jpg" },
             { id: "w_a15", city: "Wien", cat: "Aktivität", subtag: "culture", title: "Dritte Mann Tour", cost: 25, time: "1h", res: "Ticket", address: "Karlsplatz, 1010 Wien", desc: "Kanaltour.", img: "drittema.jpg" },
             { id: "w_a16", city: "Wien", cat: "Aktivität", subtag: "culture", title: "Time Travel Vienna", cost: 20, time: "1h", res: "Nein", address: "Habsburgergasse 10A, 1010 Wien", desc: "5D Show.", img: "timetr.jpg" },
-
-            // --- WIEN PARTY ---
             { id: "w_p1", city: "Wien", cat: "Party", subtag: "club", title: "Volksgarten", cost: 20, time: "Bis 05:00", res: "Nein", address: "Volksgarten, 1010 Wien", desc: "Schicker Club im Park.", img: "volksgarten.jpg" },
             { id: "w_p2", city: "Wien", cat: "Party", subtag: "club", title: "Grelle Forelle", cost: 20, time: "Bis 06:00", res: "Nein", address: "Spittelauer Lände 12, 1090 Wien", desc: "Techno, Fotoverbot.", img: "grellefo.jpg" },
             { id: "w_p3", city: "Wien", cat: "Party", subtag: "bar", title: "Travel Shack", cost: 5, time: "Bis 04:00", res: "Nein", address: "Mariahilfer Gürtel 21, 1150 Wien", desc: "Backpacker, Shots.", img: "travelsh.jpg" },
@@ -201,8 +201,6 @@
             { id: "w_p7", city: "Wien", cat: "Party", subtag: "club", title: "Sass Music Club", cost: 15, time: "Bis 06:00", res: "Nein", address: "Karlsplatz 1, 1010 Wien", desc: "Elektronisch, intim.", img: "sassmu.jpg" },
             { id: "w_p8", city: "Wien", cat: "Party", subtag: "club", title: "Prater Dome", cost: 15, time: "Bis 05:00", res: "Nein", address: "Riesenradplatz 7, 1020 Wien", desc: "Großraumdisco.", img: "praterdo.jpg" },
             { id: "w_p9", city: "Wien", cat: "Party", subtag: "club", title: "Louis Tomlinson", cost: 80, time: "Event", res: "Ticket", address: "Karl-Farkas-Gasse 19, 1030 Wien", desc: "Konzert Marx Halle.", img: "" },
-
-            // --- PRAG ESSEN ---
             { id: "p_f1", city: "Prag", cat: "Essen", subtag: "casual", title: "Kantýna", cost: 40, time: "1.5h", res: "Nein", address: "Politických vězňů 1511/5, 110 00 Prag", desc: "Carpaccio-Metzgerei in Bank.", img: "kantna.jpg" },
             { id: "p_f2", city: "Prag", cat: "Essen", subtag: "casual", title: "Lokal Dlouhááá", cost: 25, time: "Open End", res: "Empfohlen", address: "Dlouhá 33, 110 00 Prag", desc: "Frischestes Pilsner Urquell.", img: "lokaldl.jpg" },
             { id: "p_f3", city: "Prag", cat: "Essen", subtag: "casual", title: "Vytopna Railway", cost: 35, time: "1.5h", res: "Empfohlen", address: "Václavské nám. 802/56, 110 00 Prag", desc: "Wenzelsplatz. Getränke kommen mit Modelleisenbahn.", img: "vytopnara.jpg" },
@@ -210,55 +208,53 @@
             { id: "p_f5", city: "Prag", cat: "Essen", subtag: "street", title: "Naše Maso", cost: 25, time: "30min", res: "Nein", address: "Dlouhá 39, 110 00 Prag", desc: "Mini-Metzgerei. Hackbraten.", img: "naema.jpg" },
             { id: "p_f6", city: "Prag", cat: "Essen", subtag: "fine", title: "Field", cost: 120, time: "3h", res: "Zwingend", address: "U Milosrdných 12, 110 00 Prag", desc: "Michelin Stern.", img: "field.jpg" },
             { id: "p_f7", city: "Prag", cat: "Essen", subtag: "street", title: "Manifesto Market", cost: 30, time: "1h", res: "Nein", address: "Ostrovského 34, 150 00 Prag", desc: "Hipster Food Container Market.", img: "manifestoma.jpg" },
-            { id: "p_f8", city: "Prag", cat: "Essen", subtag: "street", title: "Havelská Koruna", cost: 10, time: "30min", res: "Nein", address: "Havelská 21, 110 00 Prag", desc: "Tschechische Klassiker, Kantine, billig & schnell.", img: "havelskko.jpg" },
-            { id: "p_f9", city: "Prag", cat: "Essen", subtag: "street", title: "Banh Mi Ba", cost: 15, time: "45min", res: "Nein", address: "Rybná 715/26, 110 00 Prag", desc: "Super vietnamesisches Essen (große Community in Prag).", img: "banhmi.jpg" },
-            { id: "p_f10", city: "Prag", cat: "Essen", subtag: "casual", title: "Kuchyň", cost: 40, time: "1.5h", res: "Empfohlen", address: "Hradčanské nám. 1, 118 00 Prag", desc: "Auf der Burg. Tolle Aussicht, Essen aus Töpfen.", img: "kuchy.jpg" },
+            { id: "p_f8", city: "Prag", cat: "Essen", subtag: "street", title: "Havelská Koruna", cost: 10, time: "30min", res: "Nein", address: "Havelská 21, 110 00 Prag", desc: "Tschechische Klassiker, Kantine, billig & fast.", img: "havelskko.jpg" },
+            { id: "p_f9", city: "Prag", cat: "Essen", subtag: "street", title: "Banh Mi Ba", cost: 15, time: "45min", res: "Nein", address: "Rybná 715/26, 110 00 Prag", desc: "Super vietnamesisches Essen.", img: "banhmi.jpg" },
+            { id: "p_f10", city: "Prag", cat: "Essen", subtag: "casual", title: "Kuchyň", cost: 40, time: "1.5h", res: "Empfohlen", address: "Hradčanské nám. 1, 118 00 Prag", desc: "Auf der Burg. Tolle Aussicht.", img: "kuchy.jpg" },
             { id: "p_f11", city: "Prag", cat: "Essen", subtag: "casual", title: "Pork's", cost: 30, time: "1.5h", res: "Empfohlen", address: "Mostecká 16, 118 00 Prag", desc: "Haxe.", img: "porks.jpg" },
             { id: "p_f12", city: "Prag", cat: "Essen", subtag: "fine", title: "Sia", cost: 50, time: "2h", res: "Empfohlen", address: "V Celnici 1034/6, 110 00 Prag", desc: "Asiatisch.", img: "sia.jpg" },
             { id: "p_f13", city: "Prag", cat: "Essen", subtag: "casual", title: "The Tavern", cost: 25, time: "1h", res: "Nein", address: "Chopinova 26, 120 00 Prag", desc: "Burger.", img: "theta.jpg" },
             { id: "p_f14", city: "Prag", cat: "Essen", subtag: "casual", title: "Kro Kitchen", cost: 25, time: "1h", res: "Nein", address: "Vinohradská 66, 130 00 Prag", desc: "Rotisserie.", img: "kroki.jpg" },
             { id: "p_f15", city: "Prag", cat: "Essen", subtag: "casual", title: "T-Anker", cost: 30, time: "1.5h", res: "Empfohlen", address: "Náměstí Republiky 8, 110 00 Prag", desc: "Dachterrasse.", img: "tanker.jpg" },
-            { id: "p_f16", city: "Prag", cat: "Essen", subtag: "casual", title: "Vinohradský Parlament", cost: 30, time: "1.5h", res: "Empfohlen", address: "Korunní 1, 120 00 Prag", desc: "Gute Knödelgerichte.", img: "vinohradskpa.jpg" },
+            { id: "p_f16", city: "Prag", cat: "Essen", subtag: "casual", title: "Vinohradský Parlament", cost: 30, time: "1.5h", res: "Empfohlen", address: "Korunní 1, 120 00 Prag", desc: "Gute Knödel.", img: "vinohradskpa.jpg" },
             { id: "p_f17", city: "Prag", cat: "Essen", subtag: "casual", title: "Las Adelitas", cost: 30, time: "1.5h", res: "Empfohlen", address: "Americká 8, 120 00 Prag", desc: "Guter Mexikaner.", img: "lasad.jpg" },
             { id: "p_f18", city: "Prag", cat: "Essen", subtag: "street", title: "Mr. HotDog", cost: 20, time: "1h", res: "Nein", address: "Kamenická 24, 170 00 Prag", desc: "Hotdogs.", img: "mrho.jpg" },
             { id: "p_f19", city: "Prag", cat: "Essen", subtag: "street", title: "Sisters Bistro", cost: 15, time: "30min", res: "Nein", address: "Dlouhá 39, 110 00 Prag", desc: "Brötchen.", img: "sistersbi.jpg" },
             { id: "p_f20", city: "Prag", cat: "Essen", subtag: "street", title: "Bageterie Boulevard", cost: 10, time: "15min", res: "Nein", address: "Václavské nám. 56, 110 00 Prag", desc: "Baguettes.", img: "bageteriebo.jpg" },
             { id: "p_f21", city: "Prag", cat: "Essen", subtag: "street", title: "Burrito Loco", cost: 10, time: "15min", res: "Nein", address: "Štefánikova 230/7, 150 00 Prag", desc: "Burritos.", img: "burritolo.jpg" },
-            { id: "p_f22", city: "Prag", cat: "Essen", subtag: "casual", title: "Bistro Monk", cost: 30, time: "1h", res: "Empfohlen", address: "Michalská 20, 110 00 Prag", desc: "Sehr beliebtes Frühstück.", img: "bistromo.jpg" },
-            { id: "p_f23", city: "Prag", cat: "Essen", subtag: "casual", title: "Venue", cost: 30, time: "1h", res: "Nein", address: "Havelská 4, 110 00 Prag", desc: "Tolle Brunch-Teller.", img: "venue.jpg" },
-            { id: "p_f24", city: "Prag", cat: "Essen", subtag: "street", title: "Bakeshop", cost: 25, time: "30min", res: "Nein", address: "Kozí 1, 110 00 Prag", desc: "Dlouhá Straße. Backwaren.", img: "bakeshop.jpg" },
-            { id: "p_f25", city: "Prag", cat: "Essen", subtag: "fine", title: "Café Savoy", cost: 40, time: "1.5h", res: "Empfohlen", address: "Vítězná 5, 150 00 Prag", desc: "Prunkvoll frühstücken. Imperial Style.", img: "cafsa.jpg" },
-            { id: "p_f26", city: "Prag", cat: "Essen", subtag: "street", title: "Super Tramp Coffee", cost: 10, time: "30min", res: "Nein", address: "Opatovická 160/18, 110 00 Prag", desc: "Versteckter Innenhof.", img: "supertr.jpg" },
-            { id: "p_f27", city: "Prag", cat: "Essen", subtag: "street", title: "Coffee Room", cost: 15, time: "45min", res: "Nein", address: "Korunní 74, 101 00 Prag", desc: "Vinohrady. Bester Avocado Toast.", img: "coffeero.jpg" },
-
-            // --- PRAG AKTIVITÄT ---
-            { id: "p_a1", city: "Prag", cat: "Aktivität", subtag: "relax", title: "Bier Spa Bernard", cost: 90, time: "1h", res: "Zwingend", address: "Týn 10, 110 00 Prag", desc: "Baden in Bier, Zapfanlage an der Wanne.", img: "biersp.jpg" },
-            { id: "p_a2", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Nuklearbunker Tour", cost: 25, time: "2h", res: "Ticket", address: "Václavské nám. 45 (Hotel Jalta), 110 00 Prag", desc: "Ex-Sowjet Bunker unter Hotel Jalta.", img: "nuklearbunkerto.jpg" },
-            { id: "p_a3", city: "Prag", cat: "Aktivität", subtag: "relax", title: "Tretboot fahren", cost: 20, time: "1h", res: "Nein", address: "Slovanský ostrov, 110 00 Prag", desc: "Auf der Moldau (Slovanský Insel).", img: "tretbootfa.jpg" },
+            { id: "p_f22", city: "Prag", cat: "Essen", subtag: "casual", title: "Bistro Monk", cost: 30, time: "1h", res: "Empfohlen", address: "Michalská 20, 110 00 Prag", desc: "Frühstück.", img: "bistromo.jpg" },
+            { id: "p_f23", city: "Prag", cat: "Essen", subtag: "casual", title: "Venue", cost: 30, time: "1h", res: "Nein", address: "Havelská 4, 110 00 Prag", desc: "Brunch.", img: "venue.jpg" },
+            { id: "p_f24", city: "Prag", cat: "Essen", subtag: "street", title: "Bakeshop", cost: 25, time: "30min", res: "Nein", address: "Kozí 1, 110 00 Prag", desc: "Bäckerei.", img: "bakeshop.jpg" },
+            { id: "p_f25", city: "Prag", cat: "Essen", subtag: "fine", title: "Café Savoy", cost: 40, time: "1.5h", res: "Empfohlen", address: "Vítězná 5, 150 00 Prag", desc: "Imperial.", img: "cafsa.jpg" },
+            { id: "p_f26", city: "Prag", cat: "Essen", subtag: "street", title: "Super Tramp Coffee", cost: 10, time: "30min", res: "Nein", address: "Opatovická 160/18, 110 00 Prag", desc: "Kaffee.", img: "supertr.jpg" },
+            { id: "p_f27", city: "Prag", cat: "Essen", subtag: "street", title: "Coffee Room", cost: 15, time: "45min", res: "Nein", address: "Korunní 74, 101 00 Prag", desc: "Avocado Toast.", img: "coffeero.jpg" },
+            { id: "p_f28", city: "Prag", cat: "Essen", subtag: "casual", title: "U Kroka", cost: 25, time: "1.5h", res: "Zwingend", address: "Vratislavova 12/28, 128 00 Prag", desc: "Abseits, Top Preis.", img: "ukr.jpg" },
+            { id: "p_f29", city: "Prag", cat: "Essen", subtag: "fine", title: "Lehká Hlava", cost: 30, time: "1.5h", res: "Empfohlen", address: "Boršov 280/2, 110 00 Prag", desc: "Vegetarisch.", img: "lehkhl.jpg" },
+            { id: "p_a1", city: "Prag", cat: "Aktivität", subtag: "relax", title: "Bier Spa Bernard", cost: 90, time: "1h", res: "Zwingend", address: "Týn 10, 110 00 Prag", desc: "Baden in Bier.", img: "biersp.jpg" },
+            { id: "p_a2", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Nuklearbunker Tour", cost: 25, time: "2h", res: "Ticket", address: "Václavské nám. 45, 110 00 Prag", desc: "Ex-Sowjet Bunker.", img: "nuklearbunkerto.jpg" },
+            { id: "p_a3", city: "Prag", cat: "Aktivität", subtag: "relax", title: "Tretboot fahren", cost: 20, time: "1h", res: "Nein", address: "Slovanský ostrov, 110 00 Prag", desc: "Moldau Insel.", img: "tretbootfa.jpg" },
             { id: "p_a4", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Museum of Fantastic Illusions", cost: 15, time: "1h", res: "Nein", address: "Vodičkova 31, 110 00 Prag", desc: "Lustige Fotos.", img: "museumofprag.jpg" },
-            { id: "p_a5", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Altstädter Brückenturm", cost: 10, time: "45min", res: "Nein", address: "Karlův most, 110 00 Prag", desc: "Aufstieg für den Karlsbrücke-Blick.", img: "altstdterbr.jpg" },
-            { id: "p_a6", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Museum des Kommunismus", cost: 15, time: "1.5h", res: "Nein", address: "V Celnici 1031/4, 110 00 Prag", desc: "Geschichte der CSSR.", img: "museumde.jpg" },
+            { id: "p_a5", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Altstädter Brückenturm", cost: 10, time: "45min", res: "Nein", address: "Karlův most, 110 00 Prag", desc: "Aussicht.", img: "altstdterbr.jpg" },
+            { id: "p_a6", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Museum des Kommunismus", cost: 15, time: "1.5h", res: "Nein", address: "V Celnici 1031/4, 110 00 Prag", desc: "Geschichte.", img: "museumde.jpg" },
             { id: "p_a7", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Paternoster Aufzug", cost: 0, time: "15min", res: "Nein", address: "Mariánské nám. 2, 110 00 Prag", desc: "Im Rathaus. Aufzug ohne Türen.", img: "paternosterau.jpg" },
-            { id: "p_a8", city: "Prag", cat: "Aktivität", subtag: "culture", title: "DOX Centre for Art", cost: 20, time: "2h", res: "Nein", address: "Poupětova 1, 170 00 Prag", desc: "Holešovice. Luftschiff auf dem Dach.", img: "doxce.jpg" },
+            { id: "p_a8", city: "Prag", cat: "Aktivität", subtag: "culture", title: "DOX Centre for Art", cost: 20, time: "2h", res: "Nein", address: "Poupětova 1, 170 00 Prag", desc: "Luftschiff.", img: "doxce.jpg" },
             { id: "p_a9", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Magical Cavern", cost: 10, time: "45min", res: "Nein", address: "Petřín, 118 00 Prag", desc: "Psychedelisch.", img: "magicalca.jpg" },
-            { id: "p_a10", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Idiom Installation", cost: 0, time: "15min", res: "Nein", address: "Mariánské nám. 1, 110 00 Prag", desc: "Unendlicher Bücherturm in der Bibliothek.", img: "idiomin.jpg" },
-            { id: "p_a11", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Fernsehturm Žižkov", cost: 15, time: "1h", res: "Nein", address: "Mahlerovy sady 1, 130 00 Prag", desc: "Babys krabbeln hoch. Aussicht.", img: "fernsehturmik.jpg" },
-            { id: "p_a12", city: "Prag", cat: "Aktivität", subtag: "relax", title: "Letná Park (Metronom)", cost: 0, time: "1h", res: "Nein", address: "Letná, 170 00 Prag", desc: "Skater, Aussicht, Metronom.", img: "letnpa.jpg" },
-            { id: "p_a13", city: "Prag", cat: "Aktivität", subtag: "culture", title: "John Lennon Wall", cost: 0, time: "30min", res: "Nein", address: "Velkopřevorské nám., 118 00 Prag", desc: "Graffiti Wand.", img: "johnle.jpg" },
-            { id: "p_a14", city: "Prag", cat: "Aktivität", subtag: "relax", title: "Palladium", cost: 0, time: "1h", res: "Nein", address: "Náměstí Republiky 1, 110 00 Prag", desc: "Shopping Mall.", img: "palladium.jpg" },
+            { id: "p_a10", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Idiom Installation", cost: 0, time: "15min", res: "Nein", address: "Mariánské nám. 1, 110 00 Prag", desc: "Bücherturm.", img: "idiomin.jpg" },
+            { id: "p_a11", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Fernsehturm Žižkov", cost: 15, time: "1h", res: "Nein", address: "Mahlerovy sady 1, 130 00 Prag", desc: "Babys.", img: "fernsehturmik.jpg" },
+            { id: "p_a12", city: "Prag", cat: "Aktivität", subtag: "relax", title: "Letná Park", cost: 0, time: "1h", res: "Nein", address: "Letná, 170 00 Prag", desc: "Metronom.", img: "letnpa.jpg" },
+            { id: "p_a13", city: "Prag", cat: "Aktivität", subtag: "culture", title: "John Lennon Wall", cost: 0, time: "30min", res: "Nein", address: "Velkopřevorské nám., 118 00 Prag", desc: "Graffiti.", img: "johnle.jpg" },
+            { id: "p_a14", city: "Prag", cat: "Aktivität", subtag: "relax", title: "Palladium", cost: 0, time: "1h", res: "Nein", address: "Náměstí Republiky 1, 110 00 Prag", desc: "Shopping.", img: "palladium.jpg" },
             { id: "p_a15", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Nationalmuseum", cost: 20, time: "2h", res: "Nein", address: "Václavské nám. 68, 110 00 Prag", desc: "Prunkbau.", img: "nationalmuseum.jpg" },
-            { id: "p_a16", city: "Prag", cat: "Aktivität", subtag: "relax", title: "Sauna Spot Dvorce", cost: 35, time: "2h", res: "Empfohlen", address: "Podolské nábř. 1184/5, 147 00 Prag", desc: "Sauna an der Moldau.", img: "saunasp.jpg" },
+            { id: "p_a16", city: "Prag", cat: "Aktivität", subtag: "relax", title: "Sauna Spot Dvorce", cost: 35, time: "2h", res: "Empfohlen", address: "Podolské nábř. 1184/5, 147 00 Prag", desc: "Sauna.", img: "saunasp.jpg" },
             { id: "p_a17", city: "Prag", cat: "Aktivität", subtag: "relax", title: "Infinit Maximus", cost: 50, time: "4h", res: "Empfohlen", address: "Hrázní 327/4a, 635 00 Brno", desc: "Riesige Saunawelt.", img: "infinitma.jpg" },
-
-            // --- PRAG PARTY ---
             { id: "p_p1", city: "Prag", cat: "Party", subtag: "club", title: "Cross Club", cost: 15, time: "Bis 06:00", res: "Nein", address: "Plynární 1096/23, 170 00 Prag", desc: "Steampunk D&B.", img: "crosscl.jpg" },
             { id: "p_p2", city: "Prag", cat: "Party", subtag: "bar", title: "Hemingway Bar", cost: 40, time: "2h", res: "Zwingend", address: "Karolíny Světlé 26, 110 00 Prag", desc: "Absinth-Cocktails.", img: "hemingwayba.jpg" },
-            { id: "p_p3", city: "Prag", cat: "Party", subtag: "bar", title: "Anonymous Bar", cost: 30, time: "2h", res: "Empfohlen", address: "Michalská 12, 110 00 Prag", desc: "Hidden Bar. Guy Fawkes Thema.", img: "anonymousba.jpg" },
-            { id: "p_p4", city: "Prag", cat: "Party", subtag: "bar", title: "U Sudu", cost: 10, time: "Open End", res: "Nein", address: "Vodičkova 677/10, 110 00 Prag", desc: "Höhlenbar/Weinkeller. Labyrinth.", img: "usu.jpg" },
+            { id: "p_p3", city: "Prag", cat: "Party", subtag: "bar", title: "Anonymous Bar", cost: 30, time: "2h", res: "Empfohlen", address: "Michalská 12, 110 00 Prag", desc: "Hidden Bar.", img: "anonymousba.jpg" },
+            { id: "p_p4", city: "Prag", cat: "Party", subtag: "bar", title: "U Sudu", cost: 10, time: "Open End", res: "Nein", address: "Vodičkova 677/10, 110 00 Prag", desc: "Höhlenbar.", img: "usu.jpg" },
             { id: "p_p5", city: "Prag", cat: "Party", subtag: "bar", title: "Jazz Dock", cost: 25, time: "2h", res: "Ticket", address: "Janáčkovo nábř. 3249/2, 150 00 Prag", desc: "Direkt auf dem Wasser.", img: "jazzdo.jpg" },
-            { id: "p_p6", city: "Prag", cat: "Party", subtag: "bar", title: "Black Angel's", cost: 40, time: "2h", res: "Nein", address: "Staroměstské nám. 29, 110 00 Prag", desc: "Gothic Bar im Keller am Altstädter Ring.", img: "blackan.jpg" },
-            { id: "p_p7", city: "Prag", cat: "Party", subtag: "club", title: "Karlovy Lazne", cost: 25, time: "Bis 05:00", res: "Nein", address: "Novotného lávka 198/5, 110 00 Prag", desc: "5-Stock Disco. Sehr touristisch.", img: "karlovyla.jpg" },
-            { id: "p_p8", city: "Prag", cat: "Party", subtag: "club", title: "Paul Simon Konzert", cost: 90, time: "Event", res: "Ticket", address: "Kongresszentrum, Prag", desc: "Konzert.", img: "" }, 
+            { id: "p_p6", city: "Prag", cat: "Party", subtag: "bar", title: "Black Angel's", cost: 40, time: "2h", res: "Nein", address: "Staroměstské nám. 29, 110 00 Prag", desc: "Gothic.", img: "blackan.jpg" },
+            { id: "p_p7", city: "Prag", cat: "Party", subtag: "club", title: "Karlovy Lazne", cost: 25, time: "Bis 05:00", res: "Nein", address: "Novotného lávka 198/5, 110 00 Prag", desc: "5-Stock.", img: "karlovyla.jpg" },
+            { id: "p_p8", city: "Prag", cat: "Party", subtag: "club", title: "Paul Simon Konzert", cost: 90, time: "Event", res: "Ticket", address: "Kongresszentrum, Prag", desc: "Konzert.", img: "" },
             { id: "p_p9", city: "Prag", cat: "Party", subtag: "club", title: "Epic Prague", cost: 25, time: "Bis 05:00", res: "Ticket", address: "Revoluční 1003/3, 110 00 Prag", desc: "EDM.", img: "epicpr.jpg" }
         ];
 
@@ -398,42 +394,42 @@
 
             return (
                 <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm modal-enter" onClick={onClose}>
-                    <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto shadow-2xl p-6 relative" onClick={e => e.stopPropagation()}>
+                    <div className="bg-white rounded-3xl w-full max-w-xl max-h-[85vh] overflow-hidden shadow-2xl relative flex flex-col" onClick={e => e.stopPropagation()}>
                         
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-xl font-bold text-slate-900">
-                                Alternativen zu <span className="text-indigo-600">"{currentItem.title}"</span>
-                            </h2>
-                            <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><Icon name="x" className="w-6 h-6"/></button>
+                        <div className="p-5 border-b border-rose-100 flex justify-between items-center bg-rose-50/50">
+                            <h2 className="text-lg font-bold text-rose-900">Alternativen zu "{currentItem.title}"</h2>
+                            <button onClick={onClose} className="p-2 hover:bg-rose-100 rounded-full transition-colors"><Icon name="x" className="w-5 h-5 text-rose-400"/></button>
                         </div>
 
-                        <div className="space-y-3 mb-6">
-                            {alternatives.length > 0 ? alternatives.map(alt => (
-                                <div key={alt.id} className="border border-slate-100 rounded-xl p-4 bg-slate-50/50 hover:bg-white hover:shadow-md transition-all flex flex-col cursor-default">
-                                    <div className="flex justify-between items-start mb-1">
-                                        <h4 className="font-bold text-slate-800">{alt.title}</h4>
-                                        <span className="text-xs font-mono font-bold text-slate-500">{alt.cost} CHF</span>
+                        <div className="p-6 overflow-y-auto flex-1 custom-scroll bg-white">
+                            <div className="space-y-3">
+                                {alternatives.length > 0 ? alternatives.map(alt => (
+                                    <div key={alt.id} className="border border-rose-100 rounded-2xl p-4 hover:border-rose-300 hover:shadow-md transition-all bg-white">
+                                        <div className="flex justify-between items-start mb-1">
+                                            <h4 className="font-bold text-slate-800">{alt.title}</h4>
+                                            <span className="text-xs font-mono font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded-lg">{alt.cost}.-</span>
+                                        </div>
+                                        <p className="text-xs text-slate-500 mb-2 line-clamp-2">{alt.desc}</p>
+                                        <div className="flex gap-3 text-[10px] text-slate-400 font-bold uppercase tracking-wide">
+                                            <span className="flex items-center gap-1"><Icon name="clock" className="w-3 h-3"/> {alt.time}</span>
+                                            <span className="text-amber-600">{alt.res}</span>
+                                        </div>
                                     </div>
-                                    <p className="text-xs text-slate-500 mb-2 line-clamp-2">{alt.desc}</p>
-                                    <div className="flex gap-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                                        <span className="flex items-center gap-1"><Icon name="clock" className="w-3 h-3"/> {alt.time}</span>
-                                        <span className="text-amber-600">{alt.res}</span>
-                                    </div>
-                                </div>
-                            )) : (
-                                <div className="text-center py-8 text-slate-400">
-                                    <p>Keine direkten Matches gefunden.</p>
-                                </div>
-                            )}
+                                )) : (
+                                    <div className="text-center py-10 text-slate-400">Keine direkten Matches.</div>
+                                )}
+                            </div>
                         </div>
 
-                        <button 
-                            onClick={openWebSearch}
-                            className="w-full py-3 bg-slate-100 text-slate-600 text-sm font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-slate-200 transition-colors"
-                        >
-                            <Icon name="search" className="w-4 h-4"/> 
-                            Google nach Weiterem fragen
-                        </button>
+                        <div className="p-5 border-t border-rose-100 bg-slate-50">
+                            <button 
+                                onClick={openWebSearch}
+                                className="w-full py-3 bg-white text-rose-600 text-sm font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-rose-50 transition-colors border-2 border-rose-100 shadow-sm"
+                            >
+                                <Icon name="search" className="w-4 h-4"/> 
+                                Google nach Weiterem fragen
+                            </button>
+                        </div>
                     </div>
                 </div>
             );
@@ -566,6 +562,7 @@
             const [modalOpen, setModalOpen] = useState(false);
             const [modalItem, setModalItem] = useState(null);
             
+            // Fix: Persistent Favs with correct default state
             const [favs, setFavs] = useState(() => {
                 try {
                     const saved = localStorage.getItem('trip_favs');
@@ -581,6 +578,7 @@
                 setFavs(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
             };
 
+            // Fix: Correct filtering for Favs tab
             const filteredDB = useMemo(() => {
                 if (cityFilter === 'Favs') {
                     return DB.filter(item => favs.includes(item.id));
@@ -597,6 +595,7 @@
                 setModalOpen(true);
             };
 
+            // Trip Progress Logic
             const [progress, setProgress] = useState(0);
             const [daysLeft, setDaysLeft] = useState(0);
             useEffect(() => {
@@ -646,6 +645,7 @@
                                 </div>
                             </div>
                             
+                            {/* Progress Bar */}
                             <div className="w-full h-1.5 bg-slate-100 rounded-full mt-1 relative overflow-hidden">
                                 <div className="absolute top-0 left-0 h-full bg-gradient-to-r from-rose-300 via-amber-300 to-emerald-300 transition-all duration-1000" style={{width: `${progress}%`}}></div>
                             </div>
