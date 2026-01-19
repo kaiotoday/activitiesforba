@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bingus & Amor's Trip V15 💖</title>
+    <title>Bingus & Amor's Trip V18 ✨</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -13,15 +13,15 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    <!-- Leaflet CSS & JS (Für die Karte - KEIN API KEY NÖTIG) -->
+    <!-- Leaflet CSS & JS (OpenStreetMap) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- Google Fonts: Quicksand -->
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
 
     <style>
         body { 
@@ -34,6 +34,7 @@
             background-attachment: fixed;
             color: #4c0519;
             min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
         }
         
         .fade-in { animation: fadeIn 0.4s ease-out forwards; }
@@ -60,7 +61,8 @@
         }
         
         /* Map Styles */
-        #map-container { height: 65vh; width: 100%; border-radius: 1.5rem; z-index: 1; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border: 4px solid white; }
+        #map-container { height: 65vh; width: 100%; border-radius: 1.5rem; z-index: 1; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border: 4px solid white; position: relative; }
+        
         .emoji-marker {
             display: flex; justify-content: center; align-items: center;
             font-size: 28px;
@@ -73,13 +75,11 @@
         /* Leaflet Popup Customization */
         .leaflet-popup-content-wrapper { border-radius: 16px; padding: 0; overflow: hidden; }
         .leaflet-popup-content { margin: 0; width: 260px !important; }
-        .popup-img { width: 100%; height: 120px; object-fit: cover; background-color: #fce7f3; }
         .popup-content { padding: 12px; font-family: 'Quicksand', sans-serif; }
         
         /* Scrollbars */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
         .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #fda4af; border-radius: 20px; }
@@ -100,11 +100,46 @@
     <script type="text/babel">
         const { useState, useMemo, useRef, useEffect } = React;
 
-        // --- FX RATES ---
+        // --- KONFIGURATION & DICTIONARY ---
         const FX_RATES = { 'HUF': 430, 'EUR': 1.06, 'CZK': 26 };
 
-        // --- DATENBANK (Fusioniert & Korrigiert) ---
+        const DICTIONARY = {
+            "Budapest": {
+                hello: "Szia (Sia)",
+                cheers: "Egészségedre (Egesh-sheg-ed-re)",
+                beer: "Sör (Schör)",
+                thanks: "Köszönöm (Kösönöm)",
+                bill: "A számlát kérem"
+            },
+            "Wien": {
+                hello: "Servus / Griaß di",
+                cheers: "Prost / Zum Wohl",
+                beer: "Krügerl / Seidl",
+                thanks: "Danke ur leiwand",
+                bill: "Zahlen bitte"
+            },
+            "Prag": {
+                hello: "Ahoj (Ahoy)",
+                cheers: "Na zdraví (Nas-dravi)",
+                beer: "Pivo",
+                thanks: "Děkuji (Djekuyi)",
+                bill: "Účet prosím (U-tschet)"
+            },
+            "Transfer": { // Fallback / Fun
+                hello: "Choo Choo",
+                cheers: "Prost",
+                beer: "Bier",
+                thanks: "Danke",
+                bill: "Ticket"
+            }
+        };
+
+        // --- DATENBANK ---
         const DB = [
+            // --- HOTELS ---
+            { id: "h1", lat: 47.4965, lng: 19.0629, city: "Budapest", cat: "Hotel", subtag: "hotel", title: "Quiet Retreat", cost: "???", time: "Check-in 15:00", res: "Gebucht", address: "Kazinczy utca 11, 1075 Budapest", desc: "Direkt neben Szimpla Kert. Mitten im Geschehen, aber ruhig.", img: "https://cf.bstatic.com/xdata/images/hotel/max1024x768/498369255.jpg?k=3332454532656565656565656565656565656565656565656565656565656565&o=&hp=1" },
+            { id: "h2", lat: 48.1936, lng: 16.3547, city: "Wien", cat: "Hotel", subtag: "hotel", title: "Hotel Indigo Naschmarkt", cost: "???", time: "Check-in 15:00", res: "Gebucht", address: "Rechte Wienzeile 87, 1050 Wien", desc: "Design Hotel direkt am Naschmarkt. Hidden Garden.", img: "https://digital.ihg.com/is/image/ihg/hotel-indigo-vienna-6623696224-4x3" },
+
             // TRANSFER
             { id: "t1", lat: 47.5004, lng: 19.0840, city: "Transfer", cat: "Transport", subtag: "train", title: "RegioJet Business Class", cost: 40, time: "2h 40min", res: "Zwingend", address: "Budapest-Keleti, 1087 Budapest", desc: "Route: Budapest -> Wien. 4er-Abteil, Ledersessel. Gratis Sekt/Kaffee.", img: "regiojetbu.jpg" },
             { id: "t2", lat: 48.1850, lng: 16.3779, city: "Transfer", cat: "Transport", subtag: "train", title: "ÖBB Railjet Business", cost: 80, time: "4h 05min", res: "Zwingend", address: "Wien Hbf, 1100 Wien", desc: "Route: Wien -> Prag. Upgrade zur 1. Klasse. Extrem ruhig.", img: "regiojetbu.jpg" },
@@ -116,7 +151,7 @@
             { id: "b_f4", lat: 47.4873, lng: 19.0611, city: "Budapest", cat: "Essen", subtag: "street", title: "Pizza Manufaktura", cost: 20, time: "1h", res: "Nein", address: "Lónyay u. 9, 1093 Ungarn", desc: "Local & Pizza. Entspannt, günstig.", img: "pizzama.jpg" },
             { id: "b_f5", lat: 47.4998, lng: 19.0585, city: "Budapest", cat: "Essen", subtag: "fine", title: "Twentysix", cost: 70, time: "2h", res: "Empfohlen", address: "Király u. 26, 1061 Ungarn", desc: "Indoor-Dschungel. Mediterran.", img: "twentysix.jpg" },
             { id: "b_f6", lat: 47.4975, lng: 19.0627, city: "Budapest", cat: "Essen", subtag: "casual", title: "Gettó Gulyás", cost: 30, time: "1.5h", res: "Empfohlen", address: "Wesselényi u. 18, 1077 Ungarn", desc: "Bestes Pörkölt (Gulasch) im Partyviertel.", img: "gettgu.jpg" },
-            { id: "b_f7", lat: 47.4984, lng: 19.0615, city: "Budapest", cat: "Essen", subtag: "casual", title: "Cirkusz", cost: 30, time: "1.5h", res: "Nein", address: "Dob u. 25, 1074 Ungarn", desc: "Berühmtester Brunch-Spot.", img: "cirkusz.jpg" },
+            { id: "b_f7", lat: 47.4984, lng: 19.0615, city: "Budapest", cat: "Essen", subtag: "cafe", title: "Cirkusz", cost: 30, time: "1.5h", res: "Nein", address: "Dob u. 25, 1074 Ungarn", desc: "Berühmtester Brunch-Spot.", img: "cirkusz.jpg" },
             { id: "b_f8", lat: 47.5001, lng: 19.0510, city: "Budapest", cat: "Essen", subtag: "street", title: "Bamba Marha", cost: 20, time: "45min", res: "Nein", address: "Október 6. u. 6, 1051 Ungarn", desc: "Top Burger.", img: "bambama.jpg" },
             { id: "b_f9", lat: 47.5025, lng: 19.0640, city: "Budapest", cat: "Essen", subtag: "street", title: "Frici Papa", cost: 15, time: "45min", res: "Nein", address: "Király u. 55, 1077 Ungarn", desc: "Kantine. Spottbillig.", img: "fricipa.jpg" },
             { id: "b_f10", lat: 47.4968, lng: 19.0598, city: "Budapest", cat: "Essen", subtag: "casual", title: "Dobrumba", cost: 40, time: "1.5h", res: "Empfohlen", address: "Dob u. 5, 1074 Ungarn", desc: "Levante Küche. Sehr hip.", img: "dobrumba.jpg" },
@@ -125,17 +160,17 @@
             { id: "b_f13", lat: 47.4975, lng: 19.0314, city: "Budapest", cat: "Essen", subtag: "fine", title: "Déryné", cost: 60, time: "2h", res: "Zwingend", address: "Krisztina tér 3, 1013 Ungarn", desc: "Treffpunkt der Buda-Elite.", img: "dryn.jpg" },
             { id: "b_f14", lat: 47.4787, lng: 19.0501, city: "Budapest", cat: "Essen", subtag: "street", title: "Moto Pizza", cost: 25, time: "1h", res: "Nein", address: "Bartók Béla út 46, 1111 Ungarn", desc: "Neapolitanische Pizza.", img: "motopi.jpg" },
             { id: "b_f15", lat: 47.4967, lng: 19.0635, city: "Budapest", cat: "Essen", subtag: "street", title: "Bors Gastro Bar", cost: 15, time: "30min", res: "Nein", address: "Kazinczy u. 10, 1075 Ungarn", desc: "Suppen/Baguettes to go.", img: "borsga.jpg" },
-            { id: "b_f16", lat: 47.5055, lng: 19.0372, city: "Budapest", cat: "Essen", subtag: "casual", title: "Franziska", cost: 35, time: "1.5h", res: "Empfohlen", address: "Iskola u. 29, 1011 Ungarn", desc: "Healthy Food, Smoothie Bowls.", img: "franziska.jpg" },
+            { id: "b_f16", lat: 47.5055, lng: 19.0372, city: "Budapest", cat: "Essen", subtag: "cafe", title: "Franziska", cost: 35, time: "1.5h", res: "Empfohlen", address: "Iskola u. 29, 1011 Ungarn", desc: "Healthy Food, Smoothie Bowls.", img: "franziska.jpg" },
             { id: "b_f17", lat: 47.4980, lng: 19.0647, city: "Budapest", cat: "Essen", subtag: "casual", title: "Vinyl & Wood", cost: 25, time: "1h", res: "Nein", address: "Wesselényi u. 23, 1077 Ungarn", desc: "Cooles Design, guter Toast.", img: "vinylwo.jpg" },
             { id: "b_f18", lat: 47.4871, lng: 19.0584, city: "Budapest", cat: "Essen", subtag: "street", title: "Große Markthalle", cost: 15, time: "1h", res: "Nein", address: "Vámház krt. 1-3, 1093 Ungarn", desc: "Stände (Langos/Wurst).", img: "groema.jpg" },
-            { id: "b_f19", lat: 47.5022, lng: 19.0529, city: "Budapest", cat: "Essen", subtag: "street", title: "Pink Pistachio", cost: 20, time: "30min", res: "Nein", address: "Hercegprímás u. 15, 1051 Ungarn", desc: "Süßes & Eis.", img: "pinkpi.jpg" },
+            { id: "b_f19", lat: 47.5022, lng: 19.0529, city: "Budapest", cat: "Essen", subtag: "cafe", title: "Pink Pistachio", cost: 20, time: "30min", res: "Nein", address: "Hercegprímás u. 15, 1051 Ungarn", desc: "Süßes & Eis.", img: "pinkpi.jpg" },
             { id: "b_f20", lat: 47.5031, lng: 19.0552, city: "Budapest", cat: "Essen", subtag: "street", title: "Retro Lángos", cost: 10, time: "30min", res: "Nein", address: "Bajcsy-Zsilinszky út 25, 1065 Ungarn", desc: "Der Klassiker für Lángos.", img: "retroln.jpg" },
-            { id: "b_f21", lat: 47.5022, lng: 19.0529, city: "Budapest", cat: "Essen", subtag: "street", title: "Cookie Beacon", cost: 20, time: "45min", res: "Nein", address: "Hercegprímás u. 15, 1051 Ungarn", desc: "Massive Cookies & Brunch.", img: "cookiebe.jpg" },
+            { id: "b_f21", lat: 47.5022, lng: 19.0529, city: "Budapest", cat: "Essen", subtag: "cafe", title: "Cookie Beacon", cost: 20, time: "45min", res: "Nein", address: "Hercegprímás u. 15, 1051 Ungarn", desc: "Massive Cookies & Brunch.", img: "cookiebe.jpg" },
             { id: "b_f22", lat: 47.4960, lng: 19.0531, city: "Budapest", cat: "Essen", subtag: "street", title: "Buddy's Smash Burgers", cost: 20, time: "45min", res: "Nein", address: "Fehér Hajó u. 8, 1052 Ungarn", desc: "Smashed Burger.", img: "buddys.jpg" },
             { id: "b_f23", lat: 47.4996, lng: 19.0501, city: "Budapest", cat: "Essen", subtag: "casual", title: "Retek Bistro", cost: 40, time: "1.5h", res: "Empfohlen", address: "Mérleg u. 10, 1051 Ungarn", desc: "Klassisch ungarisch.", img: "retekbi.jpg" },
             { id: "b_f24", lat: 47.4902, lng: 19.0646, city: "Budapest", cat: "Essen", subtag: "fine", title: "Arquitecto Pitpit", cost: 50, time: "2h", res: "Empfohlen", address: "Ötpacsirta u. 2, 1088 Ungarn", desc: "Tapas im Innenhof.", img: "arquitectopi.jpg" },
             { id: "b_f25", lat: 47.4960, lng: 19.0527, city: "Budapest", cat: "Essen", subtag: "street", title: "Crudo Pizza", cost: 25, time: "1h", res: "Nein", address: "Fehér Hajó u. 2-6, 1052 Ungarn", desc: "Pizza & Wine.", img: "crudopi.jpg" },
-            { id: "b_f26", lat: 47.4994, lng: 19.0606, city: "Budapest", cat: "Essen", subtag: "street", title: "Fluffy and me Pancake", cost: 20, time: "45min", res: "Nein", address: "Kazinczy u. 52 C, 1075 Ungarn", desc: "Fluffige japanische Pancakes.", img: "fluffyan.jpg" },
+            { id: "b_f26", lat: 47.4994, lng: 19.0606, city: "Budapest", cat: "Essen", subtag: "cafe", title: "Fluffy and me Pancake", cost: 20, time: "45min", res: "Nein", address: "Kazinczy u. 52 C, 1075 Ungarn", desc: "Fluffige japanische Pancakes.", img: "fluffyan.jpg" },
             { id: "b_f27", lat: 47.5115, lng: 19.0573, city: "Budapest", cat: "Essen", subtag: "street", title: "McDonalds Nyugati", cost: 15, time: "30min", res: "Nein", address: "Teréz krt. 55, 1062 Ungarn", desc: "Der schönste McDonalds der Welt.", img: "mcdonaldsny.jpg" },
 
             // BUDAPEST - AKTIVITÄT
@@ -185,15 +220,15 @@
             { id: "w_f8", lat: 48.2022, lng: 16.3676, city: "Wien", cat: "Essen", subtag: "street", title: "Leberkas-Pepi", cost: 8, time: "15min", res: "Nein", address: "Operngasse 12, 1010 Wien", desc: "Bester Leberkäse.", img: "leberkaspepi.jpg" },
             { id: "w_f9", lat: 48.2030, lng: 16.3549, city: "Wien", cat: "Essen", subtag: "fine", title: "Tian Bistro", cost: 60, time: "2h", res: "Empfohlen", address: "Schrankgasse 4, 1070 Wien", desc: "Vegetarisches Fine Dining.", img: "tianbi.jpg" },
             { id: "w_f10", lat: 48.2097, lng: 16.3751, city: "Wien", cat: "Essen", subtag: "fine", title: "Lugeck", cost: 50, time: "2h", res: "Zwingend", address: "Lugeck 4, 1010 Wien", desc: "Modernes Wirtshaus.", img: "lugeck.jpg" },
-            { id: "w_f11", lat: 48.1984, lng: 16.3624, city: "Wien", cat: "Essen", subtag: "casual", title: "Café Drechsler", cost: 25, time: "1h", res: "Nein", address: "Linke Wienzeile 22, 1060 Wien", desc: "Klassisches Kaffeehaus.", img: "cafdr.jpg" },
-            { id: "w_f12", lat: 48.1977, lng: 16.3650, city: "Wien", cat: "Essen", subtag: "casual", title: "Vollpension", cost: 25, time: "1.5h", res: "Empfohlen", address: "Schleifmühlgasse 16, 1040 Wien", desc: "Kuchen von Omas.", img: "vollpension.jpg" },
-            { id: "w_f13", lat: 48.2028, lng: 16.3533, city: "Wien", cat: "Essen", subtag: "casual", title: "Ulrich", cost: 35, time: "1.5h", res: "Empfohlen", address: "Sankt-Ulrichs-Platz 1, 1070 Wien", desc: "Top Frühstück.", img: "ulrich.jpg" },
+            { id: "w_f11", lat: 48.1984, lng: 16.3624, city: "Wien", cat: "Essen", subtag: "cafe", title: "Café Drechsler", cost: 25, time: "1h", res: "Nein", address: "Linke Wienzeile 22, 1060 Wien", desc: "Klassisches Kaffeehaus.", img: "cafdr.jpg" },
+            { id: "w_f12", lat: 48.1977, lng: 16.3650, city: "Wien", cat: "Essen", subtag: "cafe", title: "Vollpension", cost: 25, time: "1.5h", res: "Empfohlen", address: "Schleifmühlgasse 16, 1040 Wien", desc: "Kuchen von Omas.", img: "vollpension.jpg" },
+            { id: "w_f13", lat: 48.2028, lng: 16.3533, city: "Wien", cat: "Essen", subtag: "cafe", title: "Ulrich", cost: 35, time: "1.5h", res: "Empfohlen", address: "Sankt-Ulrichs-Platz 1, 1070 Wien", desc: "Top Frühstück.", img: "ulrich.jpg" },
             { id: "w_f14", lat: 48.2129, lng: 16.3800, city: "Wien", cat: "Essen", subtag: "fine", title: "Das Loft", cost: 60, time: "2h", res: "Zwingend", address: "Praterstraße 1, 1020 Wien", desc: "Teurer Brunch mit Blick.", img: "daslo.jpg" },
             { id: "w_f15", lat: 48.2139, lng: 16.4016, city: "Wien", cat: "Essen", subtag: "casual", title: "Schweizerhaus", cost: 40, time: "2h", res: "Nein", address: "Prater 116, 1020 Wien", desc: "Stelze und Bier.", img: "schweizerhaus.jpg" },
             { id: "w_f16", lat: 48.2032, lng: 16.3571, city: "Wien", cat: "Essen", subtag: "casual", title: "Glacis Beisl", cost: 45, time: "2h", res: "Empfohlen", address: "Breite G. 4, 1070 Wien", desc: "Versteckt im MQ.", img: "glacisbe.jpg" },
             { id: "w_f17", lat: 48.2193, lng: 16.3770, city: "Wien", cat: "Essen", subtag: "street", title: "Pizza Mari", cost: 25, time: "1h", res: "Nein", address: "Leopoldsgasse 23A, 1020 Wien", desc: "Beste Pizza.", img: "pizzamari.jpg" },
             { id: "w_f18", lat: 48.2109, lng: 16.3771, city: "Wien", cat: "Essen", subtag: "street", title: "Fenster Café", cost: 10, time: "15min", res: "Nein", address: "Griechengasse 10, 1010 Wien", desc: "Kaffee in der Waffel.", img: "fensterca.jpg" },
-            { id: "w_f19", lat: 48.2107, lng: 16.3651, city: "Wien", cat: "Essen", subtag: "casual", title: "Café Central", cost: 30, time: "1h", res: "Nein", address: "Herrengasse 14, 1010 Wien", desc: "Touristisch, aber schön.", img: "cafce.jpg" },
+            { id: "w_f19", lat: 48.2107, lng: 16.3651, city: "Wien", cat: "Essen", subtag: "cafe", title: "Café Central", cost: 30, time: "1h", res: "Nein", address: "Herrengasse 14, 1010 Wien", desc: "Touristisch, aber schön.", img: "cafce.jpg" },
             { id: "w_f20", lat: 48.2171, lng: 16.3627, city: "Wien", cat: "Essen", subtag: "street", title: "Der Wiener Deewan", cost: 15, time: "45min", res: "Nein", address: "Liechtensteinstraße 10, 1090 Wien", desc: "Pay as you wish.", img: "derwi.jpg" },
             { id: "w_f21", lat: 48.2046, lng: 16.3683, city: "Wien", cat: "Essen", subtag: "street", title: "Bitzinger", cost: 10, time: "15min", res: "Nein", address: "Albertinaplatz 1, 1010 Wien", desc: "Bester Würstelstand.", img: "bitzinger.jpg" },
             { id: "w_f22", lat: 48.2026, lng: 16.3591, city: "Wien", cat: "Essen", subtag: "street", title: "Burger Bros", cost: 20, time: "45min", res: "Nein", address: "Museumsplatz 1, 1070 Wien", desc: "Casual Burger.", img: "burgerbr.jpg" },
@@ -235,7 +270,7 @@
             { id: "p_f1", lat: 50.0834, lng: 14.4287, city: "Prag", cat: "Essen", subtag: "casual", title: "Kantýna", cost: 40, time: "1.5h", res: "Nein", address: "Politických vězňů 1511/5, 110 00 Prag", desc: "Carpaccio-Metzgerei in Bank.", img: "kantna.jpg" },
             { id: "p_f2", lat: 50.0907, lng: 14.4259, city: "Prag", cat: "Essen", subtag: "casual", title: "Lokal Dlouhááá", cost: 25, time: "Open End", res: "Empfohlen", address: "Dlouhá 33, 110 00 Prag", desc: "Frischestes Pilsner Urquell.", img: "lokaldl.jpg" },
             { id: "p_f3", lat: 50.0801, lng: 14.4286, city: "Prag", cat: "Essen", subtag: "casual", title: "Vytopna Railway", cost: 35, time: "1.5h", res: "Empfohlen", address: "Václavské nám. 802/56, 110 00 Prag", desc: "Wenzelsplatz. Getränke kommen mit Modelleisenbahn.", img: "vytopnara.jpg" },
-            { id: "p_f4", lat: 50.0913, lng: 14.4544, city: "Prag", cat: "Essen", subtag: "fine", title: "Eska", cost: 40, time: "1.5h", res: "Empfohlen", address: "Pernerova 49, 186 00 Prag", desc: "Karlín. Michelin Bib Gourmand, Bäckerei-Restaurant.", img: "eska.jpg" },
+            { id: "p_f4", lat: 50.0913, lng: 14.4544, city: "Prag", cat: "Essen", subtag: "cafe", title: "Eska", cost: 40, time: "1.5h", res: "Empfohlen", address: "Pernerova 49, 186 00 Prag", desc: "Karlín. Michelin Bib Gourmand, Bäckerei-Restaurant.", img: "eska.jpg" },
             { id: "p_f5", lat: 50.0912, lng: 14.4268, city: "Prag", cat: "Essen", subtag: "street", title: "Naše Maso", cost: 25, time: "30min", res: "Nein", address: "Dlouhá 39, 110 00 Prag", desc: "Mini-Metzgerei. Hackbraten.", img: "naema.jpg" },
             { id: "p_f6", lat: 50.0917, lng: 14.4219, city: "Prag", cat: "Essen", subtag: "fine", title: "Field", cost: 120, time: "3h", res: "Zwingend", address: "U Milosrdných 12, 110 00 Prag", desc: "Michelin Stern.", img: "field.jpg" },
             { id: "p_f7", lat: 50.0693, lng: 14.4036, city: "Prag", cat: "Essen", subtag: "street", title: "Manifesto Market", cost: 30, time: "1h", res: "Nein", address: "Ostrovského 34, 150 00 Prag", desc: "Hipster Food Container Market.", img: "manifestoma.jpg" },
@@ -254,11 +289,11 @@
             { id: "p_f20", lat: 50.0801, lng: 14.4287, city: "Prag", cat: "Essen", subtag: "street", title: "Bageterie Boulevard", cost: 10, time: "15min", res: "Nein", address: "Václavské nám. 56, 110 00 Prag", desc: "Baguettes.", img: "bageteriebo.jpg" },
             { id: "p_f21", lat: 50.0727, lng: 14.4037, city: "Prag", cat: "Essen", subtag: "street", title: "Burrito Loco", cost: 10, time: "15min", res: "Nein", address: "Štefánikova 230/7, 150 00 Prag", desc: "Burritos.", img: "burritolo.jpg" },
             { id: "p_f22", lat: 50.0858, lng: 14.4200, city: "Prag", cat: "Essen", subtag: "casual", title: "Bistro Monk", cost: 30, time: "1h", res: "Empfohlen", address: "Michalská 20, 110 00 Prag", desc: "Frühstück.", img: "bistromo.jpg" },
-            { id: "p_f23", lat: 50.0843, lng: 14.4206, city: "Prag", cat: "Essen", subtag: "casual", title: "Venue", cost: 30, time: "1h", res: "Nein", address: "Havelská 4, 110 00 Prag", desc: "Brunch.", img: "venue.jpg" },
+            { id: "p_f23", lat: 50.0843, lng: 14.4206, city: "Prag", cat: "Essen", subtag: "cafe", title: "Venue", cost: 30, time: "1h", res: "Nein", address: "Havelská 4, 110 00 Prag", desc: "Brunch.", img: "venue.jpg" },
             { id: "p_f24", lat: 50.0898, lng: 14.4224, city: "Prag", cat: "Essen", subtag: "street", title: "Bakeshop", cost: 25, time: "30min", res: "Nein", address: "Kozí 1, 110 00 Prag", desc: "Bäckerei.", img: "bakeshop.jpg" },
-            { id: "p_f25", lat: 50.0810, lng: 14.4072, city: "Prag", cat: "Essen", subtag: "fine", title: "Café Savoy", cost: 40, time: "1.5h", res: "Empfohlen", address: "Vítězná 5, 150 00 Prag", desc: "Imperial.", img: "cafsa.jpg" },
+            { id: "p_f25", lat: 50.0810, lng: 14.4072, city: "Prag", cat: "Essen", subtag: "cafe", title: "Café Savoy", cost: 40, time: "1.5h", res: "Empfohlen", address: "Vítězná 5, 150 00 Prag", desc: "Imperial.", img: "cafsa.jpg" },
             { id: "p_f26", lat: 50.0794, lng: 14.4189, city: "Prag", cat: "Essen", subtag: "street", title: "Super Tramp Coffee", cost: 10, time: "30min", res: "Nein", address: "Opatovická 160/18, 110 00 Prag", desc: "Kaffee.", img: "supertr.jpg" },
-            { id: "p_f27", lat: 50.0753, lng: 14.4513, city: "Prag", cat: "Essen", subtag: "street", title: "Coffee Room", cost: 15, time: "45min", res: "Nein", address: "Korunní 74, 101 00 Prag", desc: "Avocado Toast.", img: "coffeero.jpg" },
+            { id: "p_f27", lat: 50.0753, lng: 14.4513, city: "Prag", cat: "Essen", subtag: "cafe", title: "Coffee Room", cost: 15, time: "45min", res: "Nein", address: "Korunní 74, 101 00 Prag", desc: "Avocado Toast.", img: "coffeero.jpg" },
             { id: "p_f28", lat: 50.0654, lng: 14.4199, city: "Prag", cat: "Essen", subtag: "casual", title: "U Kroka", cost: 25, time: "1.5h", res: "Zwingend", address: "Vratislavova 12/28, 128 00 Prag", desc: "Abseits des Zentrums. Top Preis.", img: "ukr.jpg" },
             { id: "p_f29", lat: 50.0841, lng: 14.4145, city: "Prag", cat: "Essen", subtag: "fine", title: "Lehká Hlava", cost: 30, time: "1.5h", res: "Empfohlen", address: "Boršov 280/2, 110 00 Prag", desc: "Vegetarisch, spacig.", img: "lehkhl.jpg" },
 
@@ -319,14 +354,12 @@
             );
         };
 
-        // --- TIKTOK ICON ---
         const TikTokIcon = () => (
             <svg viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3">
                 <path d="M12.525.02c1.31-.02 2.61-.01 3.918.02.08 1.84 1.256 3.24 3.42 3.74V7.9c-1.63-.02-2.924-.6-3.879-1.92V12.9c0 3.32-3.11 5.76-6.618 4.69C7.38 17 6.13 14.88 7.5 12.3c.75-1.42 2.13-2.22 3.82-2.06V7c-3.14-.35-6.66 2.36-6.62 6.58.04 4.34 4.29 7.37 8.28 6.44 3.2-.74 5.38-3.9 5.25-7.74V4.68c2.16.03 4.14 1.3 5.09 3.5v-4.8c-.85-.18-1.7-.28-2.56-.28-1.5 0-2.88.58-4.04 1.58V0h-3.918z"/>
             </svg>
         );
 
-        // --- GOOGLE ICON ---
         const GoogleIcon = () => (
             <svg viewBox="0 0 24 24" className="w-3 h-3">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -336,47 +369,54 @@
             </svg>
         );
 
-        // --- MAP COMPONENT (New) ---
+        // --- MAP COMPONENT ---
         const MapView = ({ items, activeCity }) => {
             const mapRef = useRef(null);
             const markersRef = useRef(L.featureGroup());
 
-            // Coordinates for cities to fly to
+            // Coordinates for cities
             const CITY_COORDS = {
                 "Budapest": [47.4979, 19.0402],
                 "Wien": [48.2082, 16.3738],
                 "Prag": [50.0755, 14.4378],
-                "Transfer": [48.2082, 16.3738] // Default center
+                "Transfer": [48.2082, 16.3738]
             };
 
-            const getEmoji = (cat) => {
-                switch(cat) {
-                    case 'Essen': return '🍔';
-                    case 'Aktivität': return '🏰';
-                    case 'Party': return '🍸';
-                    case 'Transport': return '🚆';
-                    default: return '📍';
+            const getMapEmoji = (item) => {
+                if (item.cat === 'Hotel') return '🛏️';
+                if (item.cat === 'Party') return '🍸';
+                if (item.cat === 'Aktivität') return '🏰';
+                if (item.cat === 'Transport') return '🚆';
+
+                if (item.cat === 'Essen') {
+                    const lowerTitle = item.title.toLowerCase();
+                    const lowerDesc = item.desc.toLowerCase();
+                    
+                    if (item.subtag === 'cafe' || lowerTitle.includes('cafe') || lowerTitle.includes('coffee') || lowerDesc.includes('frühstück') || lowerDesc.includes('brunch') || lowerDesc.includes('bäckerei')) {
+                        return '🥐';
+                    }
+                    if (item.subtag === 'street' || lowerTitle.includes('burger') || lowerTitle.includes('pizza') || lowerDesc.includes('hotdog')) {
+                        return '🍔';
+                    }
+                    return '🥘';
                 }
+                return '📍';
             };
 
             useEffect(() => {
-                // Initialize Map if not already done
                 if (!mapRef.current) {
                     const map = L.map('map-container', { zoomControl: false }).setView(CITY_COORDS["Budapest"], 13);
-                    
                     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
                         attribution: '&copy; OpenStreetMap',
                         subdomains: 'abcd',
                         maxZoom: 20
                     }).addTo(map);
-                    
                     L.control.zoom({ position: 'bottomright' }).addTo(map);
                     mapRef.current = map;
                 }
                 
                 const map = mapRef.current;
                 
-                // Fly to city center
                 if (CITY_COORDS[activeCity]) {
                     map.flyTo(CITY_COORDS[activeCity], 13, { duration: 1.5 });
                 }
@@ -384,10 +424,10 @@
                 const markersLayer = markersRef.current;
                 markersLayer.clearLayers();
 
-                // Add markers
                 items.forEach(item => {
                     if (item.lat && item.lng && item.lat !== 0) {
-                        const iconHtml = `<div class="emoji-marker">${getEmoji(item.cat)}</div>`;
+                        const emoji = getMapEmoji(item);
+                        const iconHtml = `<div class="emoji-marker">${emoji}</div>`;
                         const customIcon = L.divIcon({
                             html: iconHtml,
                             className: 'bg-transparent',
@@ -398,7 +438,6 @@
 
                         const marker = L.marker([item.lat, item.lng], { icon: customIcon });
                         
-                        // Popup HTML
                         const popupContent = `
                             <div style="border-radius: 12px; overflow: hidden;">
                                 <div style="height: 100px; background-image: url('${item.img || ''}'); background-size: cover; background-position: center; position: relative;">
@@ -407,7 +446,7 @@
                                     </div>
                                 </div>
                                 <div class="popup-content">
-                                    <div style="font-size: 10px; color: #888; text-transform: uppercase; font-weight: bold;">${item.cat}</div>
+                                    <div style="font-size: 10px; color: #888; text-transform: uppercase; font-weight: bold;">${item.cat} • ${item.subtag || ''}</div>
                                     <div style="font-size: 12px; color: #444; margin: 4px 0;">${item.desc}</div>
                                     <a href="https://maps.google.com/?q=${item.lat},${item.lng}" target="_blank" style="display: block; margin-top: 8px; text-align: center; background: #e11d48; color: white; padding: 4px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: bold;">📍 Google Maps</a>
                                 </div>
@@ -415,23 +454,76 @@
                         `;
                         
                         marker.bindPopup(popupContent);
-                        marker.bindTooltip(item.title, { direction: 'top', offset: [0, -20], opacity: 0.9 }); // Hover tooltip
+                        marker.bindTooltip(item.title, { direction: 'top', offset: [0, -20], opacity: 0.9 });
                         markersLayer.addLayer(marker);
                     }
                 });
 
                 markersLayer.addTo(map);
 
-            }, [items, activeCity]); // Re-run when items or city changes
+            }, [items, activeCity]);
 
-            // Force map resize on mount (fixes mobile/tab glitches)
-            useEffect(() => {
-                setTimeout(() => {
-                    if (mapRef.current) mapRef.current.invalidateSize();
-                }, 200);
-            }, []);
+            const handleLocateMe = () => {
+                if (mapRef.current) {
+                    mapRef.current.locate({setView: true, maxZoom: 16});
+                }
+            };
 
-            return <div id="map-container"></div>;
+            return (
+                <div className="relative w-full h-full">
+                    <div id="map-container"></div>
+                    <button 
+                        onClick={handleLocateMe}
+                        className="absolute top-4 right-4 z-[500] bg-white p-2 rounded-xl shadow-lg border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors"
+                        title="Mein Standort"
+                    >
+                        <Icon name="crosshair" className="w-5 h-5" />
+                    </button>
+                </div>
+            );
+        };
+
+        const SurvivalDictionary = ({ city }) => {
+            const [isOpen, setIsOpen] = useState(false);
+            const dict = DICTIONARY[city] || DICTIONARY["Transfer"];
+
+            return (
+                <div className="fixed bottom-6 right-6 z-[100]">
+                    {isOpen && (
+                        <div className="absolute bottom-16 right-0 bg-white rounded-2xl shadow-2xl p-4 w-64 border border-rose-100 mb-2 modal-enter">
+                            <h3 className="font-bold text-rose-900 mb-2 border-b border-rose-100 pb-1">Survival Kit: {city}</h3>
+                            <div className="space-y-2 text-sm">
+                                <div className="flex justify-between">
+                                    <span className="text-slate-500">Hallo:</span>
+                                    <span className="font-bold text-slate-800">{dict.hello}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-slate-500">Bier:</span>
+                                    <span className="font-bold text-slate-800">{dict.beer}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-slate-500">Prost:</span>
+                                    <span className="font-bold text-slate-800">{dict.cheers}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-slate-500">Danke:</span>
+                                    <span className="font-bold text-slate-800">{dict.thanks}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-slate-500">Zahlen:</span>
+                                    <span className="font-bold text-slate-800">{dict.bill}</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    <button 
+                        onClick={() => setIsOpen(!isOpen)}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-full shadow-xl transition-transform hover:scale-110 flex items-center justify-center"
+                    >
+                        <span className="text-2xl">🗣️</span>
+                    </button>
+                </div>
+            );
         };
 
         const TripTimeline = () => {
@@ -463,10 +555,11 @@
                 }
             }, []);
 
+            // Harmonischere Farben für die Leiste
             const getSegmentColor = (index) => {
-                if (index === 1) return "bg-rose-400";
-                if (index === 2) return "bg-amber-400";
-                return "bg-emerald-400";
+                if (index === 1) return "bg-rose-300"; // Budapest (weicher)
+                if (index === 2) return "bg-amber-300"; // Wien (Gold)
+                return "bg-emerald-300"; // Prag (Grün)
             };
 
             const getFillWidth = (start, end) => {
@@ -476,9 +569,34 @@
             };
 
             return (
-                <div className="w-full bg-white/50 border-b border-rose-100 p-4 sticky top-[72px] z-30 shadow-sm backdrop-blur-md hidden md:block">
-                    <div className="max-w-4xl mx-auto relative pt-6 pb-2">
-                        <div className="absolute top-0 left-0 w-full h-2 bg-slate-200 rounded-full overflow-hidden flex">
+                <div className="w-full bg-white/50 border-b border-rose-100 p-4 sticky top-[72px] z-30 shadow-sm backdrop-blur-md hidden md:block pt-8">
+                    <div className="max-w-4xl mx-auto relative pb-2">
+                        
+                        {/* LABELS OBEN */}
+                        <div className="flex justify-between text-[10px] font-bold text-slate-500 mb-2 uppercase tracking-wide relative">
+                            <div className="flex flex-col items-center absolute left-0 -ml-4" style={{top: '-25px'}}>
+                                <span className="text-xl mb-1">🛬</span>
+                                <span>Mi 01.04.</span>
+                            </div>
+                            <div className="absolute left-[16.5%] -ml-2 text-lg opacity-60 font-black text-rose-400" style={{top: '-20px'}}>🇭🇺 BUD</div>
+                            <div className="flex flex-col items-center absolute left-[33.3%] -ml-4" style={{top: '-25px'}}>
+                                <span className="text-xl mb-1">🚂</span>
+                                <span>Sa 04.04.</span>
+                            </div>
+                            <div className="absolute left-[50%] -ml-2 text-lg opacity-60 font-black text-amber-400" style={{top: '-20px'}}>🇦🇹 VIE</div>
+                            <div className="flex flex-col items-center absolute left-[66.6%] -ml-4" style={{top: '-25px'}}>
+                                <span className="text-xl mb-1">🚂</span>
+                                <span>Di 07.04.</span>
+                            </div>
+                            <div className="absolute left-[83.5%] -ml-2 text-lg opacity-60 font-black text-emerald-400" style={{top: '-20px'}}>🇨🇿 PRG</div>
+                            <div className="flex flex-col items-center absolute right-0 -mr-4" style={{top: '-25px'}}>
+                                <span className="text-xl mb-1">🏁</span>
+                                <span>Fr 10.04.</span>
+                            </div>
+                        </div>
+
+                        {/* PROGRESS BAR */}
+                        <div className="relative w-full h-3 bg-rose-50 rounded-full overflow-hidden flex border border-rose-100 shadow-inner">
                             <div className="w-1/3 h-full relative border-r border-white/50">
                                 <div className={`h-full ${getSegmentColor(1)}`} style={{width: `${getFillWidth(0, 33.3)}%`}}></div>
                             </div>
@@ -490,33 +608,12 @@
                             </div>
                         </div>
 
+                        {/* BEER CURSOR */}
                         <div 
-                            className="absolute top-[-14px] text-2xl transition-all duration-1000 ease-linear beer-cursor z-10" 
+                            className="absolute top-[20px] text-2xl transition-all duration-1000 ease-linear beer-cursor z-10 filter drop-shadow-md" 
                             style={{ left: `calc(${progress}% - 12px)` }}
                         >
                             🍺
-                        </div>
-
-                        <div className="flex justify-between text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-wide relative">
-                            <div className="flex flex-col items-center absolute left-0 -ml-4">
-                                <span className="text-lg">🛬</span>
-                                <span>Mi 01.04.</span>
-                            </div>
-                            <div className="absolute left-[16.5%] -ml-2 text-lg opacity-50">🇭🇺</div>
-                            <div className="flex flex-col items-center absolute left-[33.3%] -ml-4">
-                                <span className="text-lg">🚂</span>
-                                <span>Sa 04.04.</span>
-                            </div>
-                            <div className="absolute left-[50%] -ml-2 text-lg opacity-50">🇦🇹</div>
-                            <div className="flex flex-col items-center absolute left-[66.6%] -ml-4">
-                                <span className="text-lg">🚂</span>
-                                <span>Di 07.04.</span>
-                            </div>
-                            <div className="absolute left-[83.5%] -ml-2 text-lg opacity-50">🇨🇿</div>
-                            <div className="flex flex-col items-center absolute right-0 -mr-4">
-                                <span className="text-lg">🏁</span>
-                                <span>Fr 10.04.</span>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -611,7 +708,6 @@
                         return bMatch - aMatch;
                     });
 
-                    // Fallback to City Only if no category match
                     if (matches.length === 0) {
                         matches = DB.filter(i => i.city === currentItem.city && i.id !== currentItem.id);
                     }
@@ -677,24 +773,24 @@
                 let city = "Budapest 🇭🇺";
                 let defaultSlots = { mor: "", aft: "", eve: "", nht: "" };
 
-                if (i === 0) { // 01.04
+                if (i === 0) { 
                     defaultSlots.eve = "🛬 Landung 20:10 (EZS1213)";
                     defaultSlots.nht = "Check-in (ab 15:00)";
-                } else if (i === 3) { // 04.04
+                } else if (i === 3) { 
                     city = "Budapest ➡️ Wien";
                     defaultSlots.mor = "Checkout BUD (bis 10:00)";
                     defaultSlots.aft = "Zug nach Wien";
                     defaultSlots.eve = "Check-in VIE (ab 15:00)";
                 } else if (i > 3 && i < 6) {
                     city = "Wien 🇦🇹";
-                } else if (i === 6) { // 07.04
+                } else if (i === 6) { 
                     city = "Wien ➡️ Prag";
                     defaultSlots.mor = "Checkout VIE (bis 12:00)";
                     defaultSlots.aft = "Zug nach Prag";
                     defaultSlots.eve = "Check-in PRG (~15:00)";
                 } else if (i > 6) {
                     city = "Prag 🇨🇿";
-                    if (i === 9) { // 10.04
+                    if (i === 9) { 
                         defaultSlots.eve = "🛫 Abflug 19:00 (EJU7572)";
                     }
                 }
@@ -786,7 +882,6 @@
                             onToast(`Kopiert: "${query}" ✅ - Jetzt in TikTok einfügen!`);
                         });
                     } else {
-                        // Desktop
                         window.open(`https://www.tiktok.com/search?q=${encodedQuery}`, '_blank');
                     }
                 }
@@ -810,7 +905,7 @@
                 else if (item.city === "Wien") { currency = '€'; rate = FX_RATES.EUR; }
                 else if (item.city === "Prag") { currency = 'Kč'; rate = FX_RATES.CZK; }
                 
-                const val = (item.cost * rate).toLocaleString(undefined, {maximumFractionDigits: 0});
+                const val = item.cost === "???" ? "???" : (item.cost * rate).toLocaleString(undefined, {maximumFractionDigits: 0});
                 return `${val} ${currency}`;
             };
 
@@ -883,7 +978,7 @@
                                 <span className={`px-2 py-0.5 rounded ${getResBadge(item.res)}`}>Res: {item.res}</span>
                             </div>
                             
-                            {item.cat !== 'Transport' && (
+                            {item.cat !== 'Transport' && item.cat !== 'Hotel' && (
                                 <button 
                                     onClick={() => onShowAlternatives(item)}
                                     className={`w-full py-2.5 text-white text-xs font-bold rounded-lg flex items-center justify-center gap-2 transition-all shadow-md ${btnClass}`}
@@ -1028,7 +1123,7 @@
                                      {/* Category Filter */}
                                      {cityFilter !== "Transfer" && cityFilter !== "Favs" && (
                                          <div className="flex gap-2 ml-auto">
-                                             {["Alle", "Essen", "Aktivität", "Party"].map(cat => (
+                                             {["Alle", "Essen", "Aktivität", "Party", "Hotel"].map(cat => (
                                                  <button key={cat} onClick={() => setCatFilter(cat)} className={`px-3 py-1 rounded-full text-[10px] font-bold border ${catFilter === cat ? 'bg-rose-100 border-rose-300 text-rose-700' : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'}`}>{cat}</button>
                                              ))}
                                          </div>
@@ -1063,7 +1158,7 @@
                                     </div>
                                     {cityFilter !== "Transfer" && cityFilter !== "Favs" && (
                                         <div className="flex gap-2 overflow-x-auto no-scrollbar">
-                                            {["Alle", "Essen", "Aktivität", "Party"].map(cat => (
+                                            {["Alle", "Essen", "Aktivität", "Party", "Hotel"].map(cat => (
                                                 <button key={cat} onClick={() => setCatFilter(cat)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border ${catFilter === cat ? 'bg-rose-100 border-rose-300 text-rose-700' : 'bg-white border-slate-200 text-slate-500'}`}>{cat}</button>
                                             ))}
                                         </div>
@@ -1098,19 +1193,26 @@
                         ) : view === 'calendar' ? (
                             <TripCalendar />
                         ) : (
-                            <div className="p-4 fade-in h-full">
+                            <div className="p-4 fade-in h-full relative">
                                 <div className="bg-white rounded-3xl p-2 shadow-lg h-full border-4 border-white">
                                     <MapView items={filteredDB} activeCity={cityFilter === 'Favs' ? 'Budapest' : cityFilter} />
                                 </div>
-                                <div className="mt-4 text-center text-xs text-slate-400 font-bold bg-white/50 inline-block px-4 py-2 rounded-full backdrop-blur-sm mx-auto flex justify-center border border-white">
-                                    <span className="mr-3">🍔 Essen</span>
-                                    <span className="mr-3">🏰 Aktivität</span>
-                                    <span className="mr-3">🍸 Party</span>
-                                    <span>🚆 Transport</span>
+                                <div className="mt-4 text-center text-xs text-slate-400 font-bold bg-white/80 inline-block px-4 py-2 rounded-full backdrop-blur-sm mx-auto flex flex-wrap justify-center border border-white gap-3">
+                                    <span>🥐 Frühstück/Café</span>
+                                    <span>🍔 Street Food</span>
+                                    <span>🥘 Restaurant</span>
+                                    <span>🍸 Party</span>
+                                    <span>🏰 Aktivität</span>
+                                    <span>🛏️ Hotel</span>
                                 </div>
                             </div>
                         )}
                     </main>
+
+                    {/* Survival Dictionary FAB */}
+                    {view !== 'calendar' && cityFilter !== 'Favs' && (
+                        <SurvivalDictionary city={cityFilter} />
+                    )}
 
                     <StaticAlternativesModal isOpen={modalOpen} onClose={() => setModalOpen(false)} currentItem={modalItem} />
                     <Toast message={toastMsg} isVisible={showToast} onClose={() => setShowToast(false)} />
