@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bingus & Amor's Trip 💖</title>
+    <title>Bingus & Amor's Trip V15 💖</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -13,6 +13,10 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
+    <!-- Leaflet CSS & JS (Für die Karte - KEIN API KEY NÖTIG) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
@@ -55,6 +59,23 @@
             width: 100%; height: 100%;
         }
         
+        /* Map Styles */
+        #map-container { height: 65vh; width: 100%; border-radius: 1.5rem; z-index: 1; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border: 4px solid white; }
+        .emoji-marker {
+            display: flex; justify-content: center; align-items: center;
+            font-size: 28px;
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        .emoji-marker:hover { transform: scale(1.3) translateY(-5px); z-index: 1000 !important; }
+        
+        /* Leaflet Popup Customization */
+        .leaflet-popup-content-wrapper { border-radius: 16px; padding: 0; overflow: hidden; }
+        .leaflet-popup-content { margin: 0; width: 260px !important; }
+        .popup-img { width: 100%; height: 120px; object-fit: cover; background-color: #fce7f3; }
+        .popup-content { padding: 12px; font-family: 'Quicksand', sans-serif; }
+        
         /* Scrollbars */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -82,191 +103,194 @@
         // --- FX RATES ---
         const FX_RATES = { 'HUF': 430, 'EUR': 1.06, 'CZK': 26 };
 
-        // --- DATENBANK ---
+        // --- DATENBANK (Fusioniert & Korrigiert) ---
         const DB = [
-             { id: "t1", city: "Transfer", cat: "Transport", subtag: "train", title: "RegioJet Business Class", cost: 40, time: "2h 40min", res: "Zwingend", address: "Budapest-Keleti, 1087 Budapest", desc: "Route: Budapest -> Wien. 4er-Abteil, Ledersessel. Gratis Sekt/Kaffee.", img: "regiojetbu.jpg" },
-            { id: "t2", city: "Transfer", cat: "Transport", subtag: "train", title: "ÖBB Railjet Business", cost: 80, time: "4h 05min", res: "Zwingend", address: "Wien Hbf, 1100 Wien", desc: "Route: Wien -> Prag. Upgrade zur 1. Klasse. Extrem ruhig.", img: "regiojetbu.jpg" },
-            { id: "b_f1", city: "Budapest", cat: "Essen", subtag: "casual", title: "Menza Étterem", cost: 35, time: "1.5h", res: "Empfohlen", address: "Liszt Ferenc tér 2, 1061 Ungarn", desc: "Retro-70er Style Kantine, gehoben. Sehr lecker.", img: "menzatt.jpg" },
-            { id: "b_f2", city: "Budapest", cat: "Essen", subtag: "street", title: "Street Food Karavan", cost: 15, time: "45min", res: "Nein", address: "Kazinczy u. 18, 1075 Ungarn", desc: "Direkt neben Szimpla. Lángos-Burger.", img: "streetfo.jpg" },
-            { id: "b_f3", city: "Budapest", cat: "Essen", subtag: "fine", title: "Mazel Tov", cost: 60, time: "2h", res: "Zwingend", address: "Akácfa u. 47, 1072 Ungarn", desc: "Israelische Fusion in schicker Ruine. Tolle Atmosphäre.", img: "mazelto.jpg" },
-            { id: "b_f4", city: "Budapest", cat: "Essen", subtag: "street", title: "Pizza Manufaktura", cost: 20, time: "1h", res: "Nein", address: "Lónyay u. 9, 1093 Ungarn", desc: "Local & Pizza. Entspannt, günstig.", img: "pizzama.jpg" },
-            { id: "b_f5", city: "Budapest", cat: "Essen", subtag: "fine", title: "Twentysix", cost: 70, time: "2h", res: "Empfohlen", address: "Király u. 26, 1061 Ungarn", desc: "Indoor-Dschungel. Mediterran.", img: "twentysix.jpg" },
-            { id: "b_f6", city: "Budapest", cat: "Essen", subtag: "casual", title: "Gettó Gulyás", cost: 30, time: "1.5h", res: "Empfohlen", address: "Wesselényi u. 18, 1077 Ungarn", desc: "Bestes Pörkölt (Gulasch) im Partyviertel.", img: "gettgu.jpg" },
-            { id: "b_f7", city: "Budapest", cat: "Essen", subtag: "casual", title: "Cirkusz", cost: 30, time: "1.5h", res: "Nein", address: "Dob u. 25, 1074 Ungarn", desc: "Berühmtester Brunch-Spot.", img: "cirkusz.jpg" },
-            { id: "b_f8", city: "Budapest", cat: "Essen", subtag: "street", title: "Bamba Marha", cost: 20, time: "45min", res: "Nein", address: "Október 6. u. 6, 1051 Ungarn", desc: "Top Burger.", img: "bambama.jpg" },
-            { id: "b_f9", city: "Budapest", cat: "Essen", subtag: "street", title: "Frici Papa", cost: 15, time: "45min", res: "Nein", address: "Király u. 55, 1077 Ungarn", desc: "Kantine. Spottbillig.", img: "fricipa.jpg" },
-            { id: "b_f10", city: "Budapest", cat: "Essen", subtag: "casual", title: "Dobrumba", cost: 40, time: "1.5h", res: "Empfohlen", address: "Dob u. 5, 1074 Ungarn", desc: "Levante Küche. Sehr hip.", img: "dobrumba.jpg" },
-            { id: "b_f11", city: "Budapest", cat: "Essen", subtag: "fine", title: "Beerstro 14", cost: 50, time: "1.5h", res: "Empfohlen", address: "Károlyi utca 12, 1053 Ungarn", desc: "Steaks und Craft Beer.", img: "beerstro14.jpg" },
-            { id: "b_f12", city: "Budapest", cat: "Essen", subtag: "casual", title: "Jamie Oliver's Italian", cost: 50, time: "1.5h", res: "Möglich", address: "Szentháromság u. 9-11, 1014 Ungarn", desc: "Solide Lage bei Fischerbastei.", img: "jamieol.jpg" },
-            { id: "b_f13", city: "Budapest", cat: "Essen", subtag: "fine", title: "Déryné", cost: 60, time: "2h", res: "Zwingend", address: "Krisztina tér 3, 1013 Ungarn", desc: "Treffpunkt der Buda-Elite.", img: "dryn.jpg" },
-            { id: "b_f14", city: "Budapest", cat: "Essen", subtag: "street", title: "Moto Pizza", cost: 25, time: "1h", res: "Nein", address: "Bartók Béla út 46, 1111 Ungarn", desc: "Neapolitanische Pizza.", img: "motopi.jpg" },
-            { id: "b_f15", city: "Budapest", cat: "Essen", subtag: "street", title: "Bors Gastro Bar", cost: 15, time: "30min", res: "Nein", address: "Kazinczy u. 10, 1075 Ungarn", desc: "Suppen/Baguettes to go.", img: "borsga.jpg" },
-            { id: "b_f16", city: "Budapest", cat: "Essen", subtag: "casual", title: "Franziska", cost: 35, time: "1.5h", res: "Empfohlen", address: "Iskola u. 29, 1011 Ungarn", desc: "Healthy Food, Smoothie Bowls.", img: "franziska.jpg" },
-            { id: "b_f17", city: "Budapest", cat: "Essen", subtag: "casual", title: "Vinyl & Wood", cost: 25, time: "1h", res: "Nein", address: "Wesselényi u. 23, 1077 Ungarn", desc: "Cooles Design, guter Toast.", img: "vinylwo.jpg" },
-            { id: "b_f18", city: "Budapest", cat: "Essen", subtag: "street", title: "Große Markthalle", cost: 15, time: "1h", res: "Nein", address: "Vámház krt. 1-3, 1093 Ungarn", desc: "Stände (Langos/Wurst).", img: "groema.jpg" },
-            { id: "b_f19", city: "Budapest", cat: "Essen", subtag: "street", title: "Pink Pistachio", cost: 20, time: "30min", res: "Nein", address: "Hercegprímás u. 15, 1051 Ungarn", desc: "Süßes & Eis.", img: "pinkpi.jpg" },
-            { id: "b_f20", city: "Budapest", cat: "Essen", subtag: "street", title: "Retro Lángos", cost: 10, time: "30min", res: "Nein", address: "Bajcsy-Zsilinszky út 25, 1065 Ungarn", desc: "Der Klassiker für Lángos.", img: "retroln.jpg" },
-            { id: "b_f21", city: "Budapest", cat: "Essen", subtag: "street", title: "Cookie Beacon", cost: 20, time: "45min", res: "Nein", address: "Hercegprímás u. 15, 1051 Ungarn", desc: "Massive Cookies & Brunch.", img: "cookiebe.jpg" },
-            { id: "b_f22", city: "Budapest", cat: "Essen", subtag: "street", title: "Buddy's Smash Burgers", cost: 20, time: "45min", res: "Nein", address: "Fehér Hajó u. 8, 1052 Ungarn", desc: "Smashed Burger.", img: "buddys.jpg" },
-            { id: "b_f23", city: "Budapest", cat: "Essen", subtag: "casual", title: "Retek Bistro", cost: 40, time: "1.5h", res: "Empfohlen", address: "Mérleg u. 10, 1051 Ungarn", desc: "Klassisch ungarisch.", img: "retekbi.jpg" },
-            { id: "b_f24", city: "Budapest", cat: "Essen", subtag: "fine", title: "Arquitecto Pitpit", cost: 50, time: "2h", res: "Empfohlen", address: "Ötpacsirta u. 2, 1088 Ungarn", desc: "Tapas im Innenhof.", img: "arquitectopi.jpg" },
-            { id: "b_f25", city: "Budapest", cat: "Essen", subtag: "street", title: "Crudo Pizza", cost: 25, time: "1h", res: "Nein", address: "Fehér Hajó u. 2-6, 1052 Ungarn", desc: "Pizza & Wine.", img: "crudopi.jpg" },
-            { id: "b_f26", city: "Budapest", cat: "Essen", subtag: "street", title: "Fluffy and me Pancake", cost: 20, time: "45min", res: "Nein", address: "Kazinczy u. 52 C, 1075 Ungarn", desc: "Fluffige japanische Pancakes.", img: "fluffyan.jpg" },
-            { id: "b_f27", city: "Budapest", cat: "Essen", subtag: "street", title: "McDonalds Nyugati", cost: 15, time: "30min", res: "Nein", address: "Teréz krt. 55, 1062 Ungarn", desc: "Der schönste McDonalds der Welt.", img: "mcdonaldsny.jpg" },
+            // TRANSFER
+            { id: "t1", lat: 47.5004, lng: 19.0840, city: "Transfer", cat: "Transport", subtag: "train", title: "RegioJet Business Class", cost: 40, time: "2h 40min", res: "Zwingend", address: "Budapest-Keleti, 1087 Budapest", desc: "Route: Budapest -> Wien. 4er-Abteil, Ledersessel. Gratis Sekt/Kaffee.", img: "regiojetbu.jpg" },
+            { id: "t2", lat: 48.1850, lng: 16.3779, city: "Transfer", cat: "Transport", subtag: "train", title: "ÖBB Railjet Business", cost: 80, time: "4h 05min", res: "Zwingend", address: "Wien Hbf, 1100 Wien", desc: "Route: Wien -> Prag. Upgrade zur 1. Klasse. Extrem ruhig.", img: "regiojetbu.jpg" },
 
-            // --- BUDAPEST AKTIVITÄT ---
-            { id: "b_a1", city: "Budapest", cat: "Aktivität", subtag: "culture", title: "House of Terror", cost: 15, time: "2h", res: "Nein", address: "Andrássy út 60, 1062 Ungarn", desc: "Museum Nazi- & Sowjetzeit.", img: "houseof.jpg" },
-            { id: "b_a2", city: "Budapest", cat: "Aktivität", subtag: "relax", title: "Mandala Day Spa", cost: 100, time: "3h+", res: "Zwingend", address: "Ipoly u. 8, 1133 Ungarn", desc: "Luxus pur, Massagen.", img: "mandalada.jpg" },
-            { id: "b_a3", city: "Budapest", cat: "Aktivität", subtag: "culture", title: "Chimney Cake Workshop", cost: 35, time: "1.5h", res: "Zwingend", address: "Rákóczi út 73, 1088 Ungarn", desc: "Kürtőskalács selber backen.", img: "chimneyca.jpg" },
-            { id: "b_a4", city: "Budapest", cat: "Aktivität", subtag: "relax", title: "Flippermuseum", cost: 15, time: "2h+", res: "Nein", address: "Radnóti Miklós u. 18, 1137 Ungarn", desc: "140+ Automaten Free Play.", img: "flippermuseum.jpg" },
-            { id: "b_a5", city: "Budapest", cat: "Aktivität", subtag: "relax", title: "St. Stephans Basilika", cost: 10, time: "1h", res: "Nein", address: "Szent István tér 1, 1051 Ungarn", desc: "Hoch auf die Kuppel für den Ausblick.", img: "stst.jpg" },
-            { id: "b_a6", city: "Budapest", cat: "Aktivität", subtag: "relax", title: "Budaer Burgviertel", cost: 15, time: "2h", res: "Nein", address: "Szent György tér 2, 1014 Ungarn", desc: "Mit Standseilbahn hoch. Aussicht genießen.", img: "budaerbu.jpg" },
-            { id: "b_a7", city: "Budapest", cat: "Aktivität", subtag: "relax", title: "Schuhe am Donauufer", cost: 0, time: "30min", res: "Nein", address: "Id. Antall József rkp., 1054 Ungarn", desc: "Bewegendes Mahnmal.", img: "schuheam.jpg" },
-            { id: "b_a8", city: "Budapest", cat: "Aktivität", subtag: "culture", title: "Light Art Museum", cost: 25, time: "1.5h", res: "Empfohlen", address: "Hold u. 13, 1054 Ungarn", desc: "Trippy Lichtinstallationen.", img: "lightar.jpg" },
-            { id: "b_a9", city: "Budapest", cat: "Aktivität", subtag: "culture", title: "House of Houdini", cost: 15, time: "1h", res: "Nein", address: "Dísz tér 11, 1014 Ungarn", desc: "Im Burgviertel. Mit Live-Zaubershow.", img: "houseofhou.jpg" },
-            { id: "b_a10", city: "Budapest", cat: "Aktivität", subtag: "culture", title: "Fischerbastei", cost: 10, time: "1h", res: "Nein", address: "Szentháromság tér, 1014 Ungarn", desc: "Der Fotospot schlechthin.", img: "fischerbastei.jpg" },
-            { id: "b_a11", city: "Budapest", cat: "Aktivität", subtag: "culture", title: "Hospital in the Rock", cost: 20, time: "1.5h", res: "Empfohlen", address: "Lovas út 4/c, 1012 Ungarn", desc: "Atombunker/Hospital.", img: "hospitalin.jpg" },
-            { id: "b_a12", city: "Budapest", cat: "Aktivität", subtag: "relax", title: "Zugliget Chairlift", cost: 15, time: "1h", res: "Nein", address: "Zugligeti út 97, 1121 Ungarn", desc: "Sessellift.", img: "zugligetch.jpg" },
-            { id: "b_a13", city: "Budapest", cat: "Aktivität", subtag: "culture", title: "Museum of Sweets & Selfies", cost: 20, time: "1h", res: "Empfohlen", address: "Paulay Ede u. 43, 1061 Ungarn", desc: "Instagram Fotos.", img: "museumof.jpg" },
-            { id: "b_a14", city: "Budapest", cat: "Aktivität", subtag: "relax", title: "Cyberjump", cost: 20, time: "1.5h", res: "Empfohlen", address: "Hengermalom út 19, 1117 Ungarn", desc: "Trampolin Park.", img: "cyberjump.jpg" },
-            { id: "b_a15", city: "Budapest", cat: "Aktivität", subtag: "relax", title: "Budapest Eye", cost: 15, time: "20min", res: "Nein", address: "Erzsébet tér, 1051 Ungarn", desc: "Riesenrad.", img: "budapestey.jpg" },
-            { id: "b_a16", city: "Budapest", cat: "Aktivität", subtag: "relax", title: "Gozsdu Udvar Arcade", cost: 10, time: "30min", res: "Nein", address: "Dob u. 16, 1075 Ungarn", desc: "Airhockey.", img: "gozsduud.jpg" },
-            { id: "b_a17", city: "Budapest", cat: "Aktivität", subtag: "relax", title: "Donau Night Walk", cost: 0, time: "1h", res: "Nein", address: "Bem rkp., 1011 Ungarn", desc: "Parlament leuchtet.", img: "donauni.jpg" },
-            { id: "b_a18", city: "Budapest", cat: "Aktivität", subtag: "relax", title: "Rudas Bad", cost: 35, time: "3h", res: "Nein", address: "Döbrentei tér 9, 1013 Ungarn", desc: "Türkisches Bad.", img: "rudasba.jpg" },
-            { id: "b_a19", city: "Budapest", cat: "Aktivität", subtag: "relax", title: "Lukács Bad", cost: 25, time: "3h", res: "Nein", address: "Frankel Leó út 25-29, 1023 Ungarn", desc: "Favorit der Einheimischen.", img: "lukcsba.jpg" },
-            { id: "b_a20", city: "Budapest", cat: "Aktivität", subtag: "relax", title: "Palatinus Strand", cost: 20, time: "4h", res: "Nein", address: "Margitsziget, 1007 Ungarn", desc: "Freibad Margareteninsel.", img: "palatinusst.jpg" },
+            // BUDAPEST - ESSEN
+            { id: "b_f1", lat: 47.5040, lng: 19.0628, city: "Budapest", cat: "Essen", subtag: "casual", title: "Menza Étterem", cost: 35, time: "1.5h", res: "Empfohlen", address: "Liszt Ferenc tér 2, 1061 Ungarn", desc: "Retro-70er Style Kantine, gehoben. Sehr lecker.", img: "menzatt.jpg" },
+            { id: "b_f2", lat: 47.4975, lng: 19.0635, city: "Budapest", cat: "Essen", subtag: "street", title: "Street Food Karavan", cost: 15, time: "45min", res: "Nein", address: "Kazinczy u. 18, 1075 Ungarn", desc: "Direkt neben Szimpla. Lángos-Burger.", img: "streetfo.jpg" },
+            { id: "b_f3", lat: 47.5004, lng: 19.0657, city: "Budapest", cat: "Essen", subtag: "fine", title: "Mazel Tov", cost: 60, time: "2h", res: "Zwingend", address: "Akácfa u. 47, 1072 Ungarn", desc: "Israelische Fusion in schicker Ruine. Tolle Atmosphäre.", img: "mazelto.jpg" },
+            { id: "b_f4", lat: 47.4873, lng: 19.0611, city: "Budapest", cat: "Essen", subtag: "street", title: "Pizza Manufaktura", cost: 20, time: "1h", res: "Nein", address: "Lónyay u. 9, 1093 Ungarn", desc: "Local & Pizza. Entspannt, günstig.", img: "pizzama.jpg" },
+            { id: "b_f5", lat: 47.4998, lng: 19.0585, city: "Budapest", cat: "Essen", subtag: "fine", title: "Twentysix", cost: 70, time: "2h", res: "Empfohlen", address: "Király u. 26, 1061 Ungarn", desc: "Indoor-Dschungel. Mediterran.", img: "twentysix.jpg" },
+            { id: "b_f6", lat: 47.4975, lng: 19.0627, city: "Budapest", cat: "Essen", subtag: "casual", title: "Gettó Gulyás", cost: 30, time: "1.5h", res: "Empfohlen", address: "Wesselényi u. 18, 1077 Ungarn", desc: "Bestes Pörkölt (Gulasch) im Partyviertel.", img: "gettgu.jpg" },
+            { id: "b_f7", lat: 47.4984, lng: 19.0615, city: "Budapest", cat: "Essen", subtag: "casual", title: "Cirkusz", cost: 30, time: "1.5h", res: "Nein", address: "Dob u. 25, 1074 Ungarn", desc: "Berühmtester Brunch-Spot.", img: "cirkusz.jpg" },
+            { id: "b_f8", lat: 47.5001, lng: 19.0510, city: "Budapest", cat: "Essen", subtag: "street", title: "Bamba Marha", cost: 20, time: "45min", res: "Nein", address: "Október 6. u. 6, 1051 Ungarn", desc: "Top Burger.", img: "bambama.jpg" },
+            { id: "b_f9", lat: 47.5025, lng: 19.0640, city: "Budapest", cat: "Essen", subtag: "street", title: "Frici Papa", cost: 15, time: "45min", res: "Nein", address: "Király u. 55, 1077 Ungarn", desc: "Kantine. Spottbillig.", img: "fricipa.jpg" },
+            { id: "b_f10", lat: 47.4968, lng: 19.0598, city: "Budapest", cat: "Essen", subtag: "casual", title: "Dobrumba", cost: 40, time: "1.5h", res: "Empfohlen", address: "Dob u. 5, 1074 Ungarn", desc: "Levante Küche. Sehr hip.", img: "dobrumba.jpg" },
+            { id: "b_f11", lat: 47.4922, lng: 19.0571, city: "Budapest", cat: "Essen", subtag: "fine", title: "Beerstro 14", cost: 50, time: "1.5h", res: "Empfohlen", address: "Károlyi utca 12, 1053 Ungarn", desc: "Steaks und Craft Beer.", img: "beerstro14.jpg" },
+            { id: "b_f12", lat: 47.5011, lng: 19.0327, city: "Budapest", cat: "Essen", subtag: "casual", title: "Jamie Oliver's Italian", cost: 50, time: "1.5h", res: "Möglich", address: "Szentháromság u. 9-11, 1014 Ungarn", desc: "Solide Lage bei Fischerbastei.", img: "jamieol.jpg" },
+            { id: "b_f13", lat: 47.4975, lng: 19.0314, city: "Budapest", cat: "Essen", subtag: "fine", title: "Déryné", cost: 60, time: "2h", res: "Zwingend", address: "Krisztina tér 3, 1013 Ungarn", desc: "Treffpunkt der Buda-Elite.", img: "dryn.jpg" },
+            { id: "b_f14", lat: 47.4787, lng: 19.0501, city: "Budapest", cat: "Essen", subtag: "street", title: "Moto Pizza", cost: 25, time: "1h", res: "Nein", address: "Bartók Béla út 46, 1111 Ungarn", desc: "Neapolitanische Pizza.", img: "motopi.jpg" },
+            { id: "b_f15", lat: 47.4967, lng: 19.0635, city: "Budapest", cat: "Essen", subtag: "street", title: "Bors Gastro Bar", cost: 15, time: "30min", res: "Nein", address: "Kazinczy u. 10, 1075 Ungarn", desc: "Suppen/Baguettes to go.", img: "borsga.jpg" },
+            { id: "b_f16", lat: 47.5055, lng: 19.0372, city: "Budapest", cat: "Essen", subtag: "casual", title: "Franziska", cost: 35, time: "1.5h", res: "Empfohlen", address: "Iskola u. 29, 1011 Ungarn", desc: "Healthy Food, Smoothie Bowls.", img: "franziska.jpg" },
+            { id: "b_f17", lat: 47.4980, lng: 19.0647, city: "Budapest", cat: "Essen", subtag: "casual", title: "Vinyl & Wood", cost: 25, time: "1h", res: "Nein", address: "Wesselényi u. 23, 1077 Ungarn", desc: "Cooles Design, guter Toast.", img: "vinylwo.jpg" },
+            { id: "b_f18", lat: 47.4871, lng: 19.0584, city: "Budapest", cat: "Essen", subtag: "street", title: "Große Markthalle", cost: 15, time: "1h", res: "Nein", address: "Vámház krt. 1-3, 1093 Ungarn", desc: "Stände (Langos/Wurst).", img: "groema.jpg" },
+            { id: "b_f19", lat: 47.5022, lng: 19.0529, city: "Budapest", cat: "Essen", subtag: "street", title: "Pink Pistachio", cost: 20, time: "30min", res: "Nein", address: "Hercegprímás u. 15, 1051 Ungarn", desc: "Süßes & Eis.", img: "pinkpi.jpg" },
+            { id: "b_f20", lat: 47.5031, lng: 19.0552, city: "Budapest", cat: "Essen", subtag: "street", title: "Retro Lángos", cost: 10, time: "30min", res: "Nein", address: "Bajcsy-Zsilinszky út 25, 1065 Ungarn", desc: "Der Klassiker für Lángos.", img: "retroln.jpg" },
+            { id: "b_f21", lat: 47.5022, lng: 19.0529, city: "Budapest", cat: "Essen", subtag: "street", title: "Cookie Beacon", cost: 20, time: "45min", res: "Nein", address: "Hercegprímás u. 15, 1051 Ungarn", desc: "Massive Cookies & Brunch.", img: "cookiebe.jpg" },
+            { id: "b_f22", lat: 47.4960, lng: 19.0531, city: "Budapest", cat: "Essen", subtag: "street", title: "Buddy's Smash Burgers", cost: 20, time: "45min", res: "Nein", address: "Fehér Hajó u. 8, 1052 Ungarn", desc: "Smashed Burger.", img: "buddys.jpg" },
+            { id: "b_f23", lat: 47.4996, lng: 19.0501, city: "Budapest", cat: "Essen", subtag: "casual", title: "Retek Bistro", cost: 40, time: "1.5h", res: "Empfohlen", address: "Mérleg u. 10, 1051 Ungarn", desc: "Klassisch ungarisch.", img: "retekbi.jpg" },
+            { id: "b_f24", lat: 47.4902, lng: 19.0646, city: "Budapest", cat: "Essen", subtag: "fine", title: "Arquitecto Pitpit", cost: 50, time: "2h", res: "Empfohlen", address: "Ötpacsirta u. 2, 1088 Ungarn", desc: "Tapas im Innenhof.", img: "arquitectopi.jpg" },
+            { id: "b_f25", lat: 47.4960, lng: 19.0527, city: "Budapest", cat: "Essen", subtag: "street", title: "Crudo Pizza", cost: 25, time: "1h", res: "Nein", address: "Fehér Hajó u. 2-6, 1052 Ungarn", desc: "Pizza & Wine.", img: "crudopi.jpg" },
+            { id: "b_f26", lat: 47.4994, lng: 19.0606, city: "Budapest", cat: "Essen", subtag: "street", title: "Fluffy and me Pancake", cost: 20, time: "45min", res: "Nein", address: "Kazinczy u. 52 C, 1075 Ungarn", desc: "Fluffige japanische Pancakes.", img: "fluffyan.jpg" },
+            { id: "b_f27", lat: 47.5115, lng: 19.0573, city: "Budapest", cat: "Essen", subtag: "street", title: "McDonalds Nyugati", cost: 15, time: "30min", res: "Nein", address: "Teréz krt. 55, 1062 Ungarn", desc: "Der schönste McDonalds der Welt.", img: "mcdonaldsny.jpg" },
 
-            // --- BUDAPEST PARTY ---
-            { id: "b_p1", city: "Budapest", cat: "Party", subtag: "bar", title: "Szimpla Kert", cost: 15, time: "Open End", res: "Nein", address: "Kazinczy u. 14, 1075 Ungarn", desc: "Muss sein. Ruinenbar.", img: "szimplake.jpg" },
-            { id: "b_p2", city: "Budapest", cat: "Party", subtag: "club", title: "Instant-Fogas", cost: 10, time: "Bis 06:00", res: "Nein", address: "Akácfa u. 49-51, 1073 Ungarn", desc: "Riesiges Labyrinth, 7 Floors.", img: "instantfogas.jpg" },
-            { id: "b_p3", city: "Budapest", cat: "Party", subtag: "bar", title: "Hotsy Totsy", cost: 40, time: "2h", res: "Empfohlen", address: "Síp u. 24, 1075 Ungarn", desc: "High-End Cocktails.", img: "hotsyto.jpg" },
-            { id: "b_p4", city: "Budapest", cat: "Party", subtag: "club", title: "Aether", cost: 20, time: "Bis 06:00", res: "Nein", address: "Kiraly u. 13 (Gozsdu), 1075 Ungarn", desc: "Techno/House Keller.", img: "aether.jpg" },
-            { id: "b_p5", city: "Budapest", cat: "Party", subtag: "club", title: "Ötkert", cost: 20, time: "Bis 05:00", res: "Nein", address: "Zrínyi u. 4/A, 1051 Ungarn", desc: "Posher, R&B Hits.", img: "tkert.jpg" },
-            { id: "b_p6", city: "Budapest", cat: "Party", subtag: "bar", title: "Pontoon", cost: 0, time: "Open End", res: "Nein", address: "Id. Antall József rkp. 1, 1051 Ungarn", desc: "Open Air an der Brücke.", img: "pontoon.jpg" },
-            { id: "b_p7", city: "Budapest", cat: "Party", subtag: "bar", title: "Dürer Kert", cost: 15, time: "Open End", res: "Nein", address: "Öböl u. 1, 1117 Ungarn", desc: "Alternative Szene, Garten.", img: "drerke.jpg" },
-            { id: "b_p8", city: "Budapest", cat: "Party", subtag: "club", title: "Budapest Boat Party", cost: 40, time: "22:00-00:00", res: "Ticket", address: "Petőfi tér 9, 1052 Ungarn", desc: "Auf Schiff saufen.", img: "budapestbo.jpg" },
-            { id: "b_p9", city: "Budapest", cat: "Party", subtag: "bar", title: "Boutiq'Bar", cost: 40, time: "2h", res: "Empfohlen", address: "Paulay Ede u. 5, 1061 Ungarn", desc: "Weltklasse Cocktails.", img: "boutiqbar.jpg" },
-            { id: "b_p10", city: "Budapest", cat: "Party", subtag: "bar", title: "Csendes Létterem", cost: 15, time: "2h", res: "Nein", address: "Ferenczy István u. 5, 1053 Ungarn", desc: "Surreale Vintage-Bar.", img: "csendeslt.jpg" },
-            { id: "b_p11", city: "Budapest", cat: "Party", subtag: "bar", title: "Élesztőház", cost: 20, time: "2h", res: "Nein", address: "Tűzoltó u. 22, 1094 Ungarn", desc: "Ruinen-Pub für Craft Beer.", img: "leszthz.jpg" },
-            { id: "b_p12", city: "Budapest", cat: "Party", subtag: "bar", title: "Madhouse", cost: 25, time: "2h", res: "Nein", address: "Anker köz 1-3, 1061 Ungarn", desc: "Bistro der Mad Scientist Brauerei.", img: "madhouse.jpg" },
+            // BUDAPEST - AKTIVITÄT
+            { id: "b_a1", lat: 47.5069, lng: 19.0650, city: "Budapest", cat: "Aktivität", subtag: "culture", title: "House of Terror", cost: 15, time: "2h", res: "Nein", address: "Andrássy út 60, 1062 Ungarn", desc: "Museum Nazi- & Sowjetzeit.", img: "houseof.jpg" },
+            { id: "b_a2", lat: 47.5203, lng: 19.0551, city: "Budapest", cat: "Aktivität", subtag: "relax", title: "Mandala Day Spa", cost: 100, time: "3h+", res: "Zwingend", address: "Ipoly u. 8, 1133 Ungarn", desc: "Luxus pur, Massagen.", img: "mandalada.jpg" },
+            { id: "b_a3", lat: 47.4989, lng: 19.0788, city: "Budapest", cat: "Aktivität", subtag: "culture", title: "Chimney Cake Workshop", cost: 35, time: "1.5h", res: "Zwingend", address: "Rákóczi út 73, 1088 Ungarn", desc: "Kürtőskalács selber backen.", img: "chimneyca.jpg" },
+            { id: "b_a4", lat: 47.5146, lng: 19.0544, city: "Budapest", cat: "Aktivität", subtag: "relax", title: "Flippermuseum", cost: 15, time: "2h+", res: "Nein", address: "Radnóti Miklós u. 18, 1137 Ungarn", desc: "140+ Automaten Free Play.", img: "flippermuseum.jpg" },
+            { id: "b_a5", lat: 47.5008, lng: 19.0540, city: "Budapest", cat: "Aktivität", subtag: "relax", title: "St. Stephans Basilika", cost: 10, time: "1h", res: "Nein", address: "Szent István tér 1, 1051 Ungarn", desc: "Hoch auf die Kuppel für den Ausblick.", img: "stst.jpg" },
+            { id: "b_a6", lat: 47.4962, lng: 19.0398, city: "Budapest", cat: "Aktivität", subtag: "relax", title: "Budaer Burgviertel", cost: 15, time: "2h", res: "Nein", address: "Szent György tér 2, 1014 Ungarn", desc: "Mit Standseilbahn hoch. Aussicht genießen.", img: "budaerbu.jpg" },
+            { id: "b_a7", lat: 47.5042, lng: 19.0448, city: "Budapest", cat: "Aktivität", subtag: "relax", title: "Schuhe am Donauufer", cost: 0, time: "30min", res: "Nein", address: "Id. Antall József rkp., 1054 Ungarn", desc: "Bewegendes Mahnmal.", img: "schuheam.jpg" },
+            { id: "b_a8", lat: 47.5048, lng: 19.0528, city: "Budapest", cat: "Aktivität", subtag: "culture", title: "Light Art Museum", cost: 25, time: "1.5h", res: "Empfohlen", address: "Hold u. 13, 1054 Ungarn", desc: "Trippy Lichtinstallationen.", img: "lightar.jpg" },
+            { id: "b_a9", lat: 47.4992, lng: 19.0350, city: "Budapest", cat: "Aktivität", subtag: "culture", title: "House of Houdini", cost: 15, time: "1h", res: "Nein", address: "Dísz tér 11, 1014 Ungarn", desc: "Im Burgviertel. Mit Live-Zaubershow.", img: "houseofhou.jpg" },
+            { id: "b_a10", lat: 47.5023, lng: 19.0344, city: "Budapest", cat: "Aktivität", subtag: "culture", title: "Fischerbastei", cost: 10, time: "1h", res: "Nein", address: "Szentháromság tér, 1014 Ungarn", desc: "Der Fotospot schlechthin.", img: "fischerbastei.jpg" },
+            { id: "b_a11", lat: 47.5008, lng: 19.0314, city: "Budapest", cat: "Aktivität", subtag: "culture", title: "Hospital in the Rock", cost: 20, time: "1.5h", res: "Empfohlen", address: "Lovas út 4/c, 1012 Ungarn", desc: "Atombunker/Hospital.", img: "hospitalin.jpg" },
+            { id: "b_a12", lat: 47.5165, lng: 18.9747, city: "Budapest", cat: "Aktivität", subtag: "relax", title: "Zugliget Chairlift", cost: 15, time: "1h", res: "Nein", address: "Zugligeti út 97, 1121 Ungarn", desc: "Sessellift.", img: "zugligetch.jpg" },
+            { id: "b_a13", lat: 47.5022, lng: 19.0603, city: "Budapest", cat: "Aktivität", subtag: "culture", title: "Museum of Sweets & Selfies", cost: 20, time: "1h", res: "Empfohlen", address: "Paulay Ede u. 43, 1061 Ungarn", desc: "Instagram Fotos.", img: "museumof.jpg" },
+            { id: "b_a14", lat: 47.4597, lng: 19.0515, city: "Budapest", cat: "Aktivität", subtag: "relax", title: "Cyberjump", cost: 20, time: "1.5h", res: "Empfohlen", address: "Hengermalom út 19, 1117 Ungarn", desc: "Trampolin Park.", img: "cyberjump.jpg" },
+            { id: "b_a15", lat: 47.4980, lng: 19.0516, city: "Budapest", cat: "Aktivität", subtag: "relax", title: "Budapest Eye", cost: 15, time: "20min", res: "Nein", address: "Erzsébet tér, 1051 Ungarn", desc: "Riesenrad.", img: "budapestey.jpg" },
+            { id: "b_a16", lat: 47.4982, lng: 19.0598, city: "Budapest", cat: "Aktivität", subtag: "relax", title: "Gozsdu Udvar Arcade", cost: 10, time: "30min", res: "Nein", address: "Dob u. 16, 1075 Ungarn", desc: "Airhockey.", img: "gozsduud.jpg" },
+            { id: "b_a17", lat: 47.5060, lng: 19.0390, city: "Budapest", cat: "Aktivität", subtag: "relax", title: "Donau Night Walk", cost: 0, time: "1h", res: "Nein", address: "Bem rkp., 1011 Ungarn", desc: "Parlament leuchtet.", img: "donauni.jpg" },
+            { id: "b_a18", lat: 47.4891, lng: 19.0478, city: "Budapest", cat: "Aktivität", subtag: "relax", title: "Rudas Bad", cost: 35, time: "3h", res: "Nein", address: "Döbrentei tér 9, 1013 Ungarn", desc: "Türkisches Bad.", img: "rudasba.jpg" },
+            { id: "b_a19", lat: 47.5180, lng: 19.0371, city: "Budapest", cat: "Aktivität", subtag: "relax", title: "Lukács Bad", cost: 25, time: "3h", res: "Nein", address: "Frankel Leó út 25-29, 1023 Ungarn", desc: "Favorit der Einheimischen.", img: "lukcsba.jpg" },
+            { id: "b_a20", lat: 47.5273, lng: 19.0479, city: "Budapest", cat: "Aktivität", subtag: "relax", title: "Palatinus Strand", cost: 20, time: "4h", res: "Nein", address: "Margitsziget, 1007 Ungarn", desc: "Freibad Margareteninsel.", img: "palatinusst.jpg" },
 
-            // --- WIEN ESSEN ---
-            { id: "w_f1", city: "Wien", cat: "Essen", subtag: "casual", title: "Schwarzes Kameel", cost: 35, time: "1h", res: "Nein", address: "Bognergasse 5, 1010 Wien", desc: "MUST-DO. Stehbuffet, Brötchen & Wein. Society Treff.", img: "schwarzeska.jpg" },
-            { id: "w_f2", city: "Wien", cat: "Essen", subtag: "casual", title: "Figlmüller", cost: 45, time: "1.5h", res: "Zwingend", address: "Wollzeile 5, 1010 Wien", desc: "Heimat des Schnitzels.", img: "figlmller.jpg" },
-            { id: "w_f3", city: "Wien", cat: "Essen", subtag: "casual", title: "Naschmarkt (NENI)", cost: 35, time: "1.5h", res: "Empfohlen", address: "Naschmarkt 510, 1060 Wien", desc: "Israelisch am Markt.", img: "naschmarkt.jpg" },
-            { id: "w_f4", city: "Wien", cat: "Essen", subtag: "fine", title: "Mochi", cost: 80, time: "2h", res: "Zwingend", address: "Praterstraße 15, 1020 Wien", desc: "Bestes Sushi/Fusion.", img: "mochi.jpg" },
-            { id: "w_f5", city: "Wien", cat: "Essen", subtag: "fine", title: "Seven North", cost: 70, time: "2.5h", res: "Empfohlen", address: "Schottenfeldgasse 74, 1070 Wien", desc: "Eyal Shani. Laut, international.", img: "sevenno.jpg" },
-            { id: "w_f6", city: "Wien", cat: "Essen", subtag: "casual", title: "Schnitzelwirt", cost: 30, time: "1h", res: "Nein", address: "Neubaugasse 52, 1070 Wien", desc: "Riesige Portionen, günstig.", img: "schnitzelwirt.jpg" },
-            { id: "w_f7", city: "Wien", cat: "Essen", subtag: "street", title: "Swing Kitchen", cost: 20, time: "45min", res: "Nein", address: "Operngasse 24, 1040 Wien", desc: "Bester veganer Burger.", img: "swingki.jpg" },
-            { id: "w_f8", city: "Wien", cat: "Essen", subtag: "street", title: "Leberkas-Pepi", cost: 8, time: "15min", res: "Nein", address: "Operngasse 12, 1010 Wien", desc: "Bester Leberkäse.", img: "leberkaspepi.jpg" },
-            { id: "w_f9", city: "Wien", cat: "Essen", subtag: "fine", title: "Tian Bistro", cost: 60, time: "2h", res: "Empfohlen", address: "Schrankgasse 4, 1070 Wien", desc: "Vegetarisches Fine Dining.", img: "tianbi.jpg" },
-            { id: "w_f10", city: "Wien", cat: "Essen", subtag: "fine", title: "Lugeck", cost: 50, time: "2h", res: "Zwingend", address: "Lugeck 4, 1010 Wien", desc: "Modernes Wirtshaus.", img: "lugeck.jpg" },
-            { id: "w_f11", city: "Wien", cat: "Essen", subtag: "casual", title: "Café Drechsler", cost: 25, time: "1h", res: "Nein", address: "Linke Wienzeile 22, 1060 Wien", desc: "Klassisches Kaffeehaus.", img: "cafdr.jpg" },
-            { id: "w_f12", city: "Wien", cat: "Essen", subtag: "casual", title: "Vollpension", cost: 25, time: "1.5h", res: "Empfohlen", address: "Schleifmühlgasse 16, 1040 Wien", desc: "Kuchen von Omas.", img: "vollpension.jpg" },
-            { id: "w_f13", city: "Wien", cat: "Essen", subtag: "casual", title: "Ulrich", cost: 35, time: "1.5h", res: "Empfohlen", address: "Sankt-Ulrichs-Platz 1, 1070 Wien", desc: "Top Frühstück.", img: "ulrich.jpg" },
-            { id: "w_f14", city: "Wien", cat: "Essen", subtag: "fine", title: "Das Loft", cost: 60, time: "2h", res: "Zwingend", address: "Praterstraße 1, 1020 Wien", desc: "Teurer Brunch mit Blick.", img: "daslo.jpg" },
-            { id: "w_f15", city: "Wien", cat: "Essen", subtag: "casual", title: "Schweizerhaus", cost: 40, time: "2h", res: "Nein", address: "Prater 116, 1020 Wien", desc: "Stelze und Bier.", img: "schweizerhaus.jpg" },
-            { id: "w_f16", city: "Wien", cat: "Essen", subtag: "casual", title: "Glacis Beisl", cost: 45, time: "2h", res: "Empfohlen", address: "Breite G. 4, 1070 Wien", desc: "Versteckt im MQ.", img: "glacisbe.jpg" },
-            { id: "w_f17", city: "Wien", cat: "Essen", subtag: "street", title: "Pizza Mari", cost: 25, time: "1h", res: "Nein", address: "Leopoldsgasse 23A, 1020 Wien", desc: "Beste Pizza.", img: "pizzamari.jpg" },
-            { id: "w_f18", city: "Wien", cat: "Essen", subtag: "street", title: "Fenster Café", cost: 10, time: "15min", res: "Nein", address: "Griechengasse 10, 1010 Wien", desc: "Kaffee in der Waffel.", img: "fensterca.jpg" },
-            { id: "w_f19", city: "Wien", cat: "Essen", subtag: "casual", title: "Café Central", cost: 30, time: "1h", res: "Nein", address: "Herrengasse 14, 1010 Wien", desc: "Touristisch, aber schön.", img: "cafce.jpg" },
-            { id: "w_f20", city: "Wien", cat: "Essen", subtag: "street", title: "Der Wiener Deewan", cost: 15, time: "45min", res: "Nein", address: "Liechtensteinstraße 10, 1090 Wien", desc: "Pay as you wish.", img: "derwi.jpg" },
-            { id: "w_f21", city: "Wien", cat: "Essen", subtag: "street", title: "Bitzinger", cost: 10, time: "15min", res: "Nein", address: "Albertinaplatz 1, 1010 Wien", desc: "Bester Würstelstand.", img: "bitzinger.jpg" },
-            { id: "w_f22", city: "Wien", cat: "Essen", subtag: "street", title: "Burger Bros", cost: 20, time: "45min", res: "Nein", address: "Museumsplatz 1, 1070 Wien", desc: "Casual Burger.", img: "burgerbr.jpg" },
-            { id: "w_f23", city: "Wien", cat: "Essen", subtag: "street", title: "Ivy's Pho", cost: 20, time: "45min", res: "Nein", address: "Mariahilfer Str. 103, 1060 Wien", desc: "Vietnamesisch.", img: "ivysph.jpg" },
-            { id: "w_f24", city: "Wien", cat: "Essen", subtag: "casual", title: "1500 Foodmakers", cost: 40, time: "1.5h", res: "Empfohlen", address: "Museumstraße 9, 1070 Wien", desc: "Im 25hours Hotel.", img: "1500fo.jpg" },
-            { id: "w_f25", city: "Wien", cat: "Essen", subtag: "fine", title: "Motto am Fluss", cost: 50, time: "2h", res: "Empfohlen", address: "Franz-Josefs-Kai 2, 1010 Wien", desc: "Schiff-Design.", img: "mottoam.jpg" },
-            { id: "w_f26", city: "Wien", cat: "Essen", subtag: "casual", title: "Ramien", cost: 30, time: "1h", res: "Nein", address: "Gumpendorfer Str. 9, 1060 Wien", desc: "Asiatisch.", img: "ramien.jpg" },
+            // BUDAPEST - PARTY
+            { id: "b_p1", lat: 47.4969, lng: 19.0633, city: "Budapest", cat: "Party", subtag: "bar", title: "Szimpla Kert", cost: 15, time: "Open End", res: "Nein", address: "Kazinczy u. 14, 1075 Ungarn", desc: "Muss sein. Ruinenbar.", img: "szimplake.jpg" },
+            { id: "b_p2", lat: 47.5005, lng: 19.0655, city: "Budapest", cat: "Party", subtag: "club", title: "Instant-Fogas", cost: 10, time: "Bis 06:00", res: "Nein", address: "Akácfa u. 49-51, 1073 Ungarn", desc: "Riesiges Labyrinth, 7 Floors.", img: "instantfogas.jpg" },
+            { id: "b_p3", lat: 47.4976, lng: 19.0610, city: "Budapest", cat: "Party", subtag: "bar", title: "Hotsy Totsy", cost: 40, time: "2h", res: "Empfohlen", address: "Síp u. 24, 1075 Ungarn", desc: "High-End Cocktails.", img: "hotsyto.jpg" },
+            { id: "b_p4", lat: 47.4979, lng: 19.0596, city: "Budapest", cat: "Party", subtag: "club", title: "Aether", cost: 20, time: "Bis 06:00", res: "Nein", address: "Kiraly u. 13 (Gozsdu), 1075 Ungarn", desc: "Techno/House Keller.", img: "aether.jpg" },
+            { id: "b_p5", lat: 47.5005, lng: 19.0507, city: "Budapest", cat: "Party", subtag: "club", title: "Ötkert", cost: 20, time: "Bis 05:00", res: "Nein", address: "Zrínyi u. 4/A, 1051 Ungarn", desc: "Posher, R&B Hits.", img: "tkert.jpg" },
+            { id: "b_p6", lat: 47.4991, lng: 19.0461, city: "Budapest", cat: "Party", subtag: "bar", title: "Pontoon", cost: 0, time: "Open End", res: "Nein", address: "Id. Antall József rkp. 1, 1051 Ungarn", desc: "Open Air an der Brücke.", img: "pontoon.jpg" },
+            { id: "b_p7", lat: 47.4600, lng: 19.0575, city: "Budapest", cat: "Party", subtag: "bar", title: "Dürer Kert", cost: 15, time: "Open End", res: "Nein", address: "Öböl u. 1, 1117 Ungarn", desc: "Alternative Szene, Garten.", img: "drerke.jpg" },
+            { id: "b_p8", lat: 47.4928, lng: 19.0496, city: "Budapest", cat: "Party", subtag: "club", title: "Budapest Boat Party", cost: 40, time: "22:00-00:00", res: "Ticket", address: "Petőfi tér 9, 1052 Ungarn", desc: "Auf Schiff saufen.", img: "budapestbo.jpg" },
+            { id: "b_p9", lat: 47.4993, lng: 19.0563, city: "Budapest", cat: "Party", subtag: "bar", title: "Boutiq'Bar", cost: 40, time: "2h", res: "Empfohlen", address: "Paulay Ede u. 5, 1061 Ungarn", desc: "Weltklasse Cocktails.", img: "boutiqbar.jpg" },
+            { id: "b_p10", lat: 47.4928, lng: 19.0602, city: "Budapest", cat: "Party", subtag: "bar", title: "Csendes Létterem", cost: 15, time: "2h", res: "Nein", address: "Ferenczy István u. 5, 1053 Ungarn", desc: "Surreale Vintage-Bar.", img: "csendeslt.jpg" },
+            { id: "b_p11", lat: 47.4836, lng: 19.0727, city: "Budapest", cat: "Party", subtag: "bar", title: "Élesztőház", cost: 20, time: "2h", res: "Nein", address: "Tűzoltó u. 22, 1094 Ungarn", desc: "Ruinen-Pub für Craft Beer.", img: "leszthz.jpg" },
+            { id: "b_p12", lat: 47.4981, lng: 19.0555, city: "Budapest", cat: "Party", subtag: "bar", title: "Madhouse", cost: 25, time: "2h", res: "Nein", address: "Anker köz 1-3, 1061 Ungarn", desc: "Bistro der Mad Scientist Brauerei.", img: "madhouse.jpg" },
 
-            // --- WIEN AKTIVITÄT ---
-            { id: "w_a1", city: "Wien", cat: "Aktivität", subtag: "culture", title: "Albertina", cost: 20, time: "2h", res: "Nein", address: "Albertinaplatz 1, 1010 Wien", desc: "Prunkräume & Kunst.", img: "albertina.jpg" },
-            { id: "w_a2", city: "Wien", cat: "Aktivität", subtag: "culture", title: "Hundertwasserhaus", cost: 0, time: "30min", res: "Nein", address: "Kegelgasse 36-38, 1030 Wien", desc: "Architektur Fotos.", img: "hundertwasserhaus.jpg" },
-            { id: "w_a3", city: "Wien", cat: "Aktivität", subtag: "relax", title: "Prater", cost: 30, time: "3h", res: "Nein", address: "1020 Wien", desc: "Vergnügungspark.", img: "prater.jpg" },
-            { id: "w_a4", city: "Wien", cat: "Aktivität", subtag: "culture", title: "Narrenturm", cost: 15, time: "1h", res: "Nein", address: "Spitalgasse 2, 1090 Wien", desc: "Pathologisch-anatomisch.", img: "narrenturm.jpg" },
-            { id: "w_a5", city: "Wien", cat: "Aktivität", subtag: "culture", title: "KHM", cost: 20, time: "2h", res: "Nein", address: "Maria-Theresien-Platz, 1010 Wien", desc: "Kunsthistorisches Museum.", img: "khm.jpg" },
-            { id: "w_a6", city: "Wien", cat: "Aktivität", subtag: "culture", title: "Schloss Schönbrunn", cost: 0, time: "2h", res: "Nein", address: "Schönbrunner Schloßstraße 47, 1130 Wien", desc: "Park ist gratis.", img: "schlosssc.jpg" },
-            { id: "w_a7", city: "Wien", cat: "Aktivität", subtag: "relax", title: "Haus des Meeres", cost: 25, time: "2h", res: "Nein", address: "Fritz-Grünbaum-Platz 1, 1060 Wien", desc: "Aquarium im Flakturm.", img: "hausde.jpg" },
-            { id: "w_a8", city: "Wien", cat: "Aktivität", subtag: "relax", title: "Therme Wien", cost: 40, time: "4h", res: "Nein", address: "Kurbadstraße 14, 1100 Wien", desc: "Moderne Therme.", img: "thermewi.jpg" },
-            { id: "w_a9", city: "Wien", cat: "Aktivität", subtag: "relax", title: "Amalienbad", cost: 10, time: "2h", res: "Nein", address: "Reumannplatz 23, 1100 Wien", desc: "Historisches Hallenbad.", img: "amalienbad.jpg" },
-            { id: "w_a10", city: "Wien", cat: "Aktivität", subtag: "relax", title: "Donaukanal", cost: 0, time: "1h", res: "Nein", address: "Donaukanal, 1010 Wien", desc: "Graffiti & Chillen.", img: "donaukanal.jpg" },
-            { id: "w_a11", city: "Wien", cat: "Aktivität", subtag: "culture", title: "Belvedere", cost: 20, time: "1.5h", res: "Empfohlen", address: "Prinz Eugen-Straße 27, 1030 Wien", desc: "Klimt's Kuss.", img: "belvedere.jpg" },
-            { id: "w_a12", city: "Wien", cat: "Aktivität", subtag: "relax", title: "Schmetterlinghaus", cost: 10, time: "30min", res: "Nein", address: "Hofburg, 1010 Wien", desc: "Im Burggarten.", img: "schmetterlinghaus.jpg" },
-            { id: "w_a13", city: "Wien", cat: "Aktivität", subtag: "culture", title: "Weltmuseum", cost: 15, time: "1.5h", res: "Nein", address: "Heldenplatz, 1010 Wien", desc: "Ethnologie.", img: "weltmuseum.jpg" },
-            { id: "w_a14", city: "Wien", cat: "Aktivität", subtag: "culture", title: "Haus der Musik", cost: 15, time: "1.5h", res: "Nein", address: "Seilerstätte 30, 1010 Wien", desc: "Interaktiv.", img: "hausdermusik.jpg" },
-            { id: "w_a15", city: "Wien", cat: "Aktivität", subtag: "culture", title: "Dritte Mann Tour", cost: 25, time: "1h", res: "Ticket", address: "Karlsplatz, 1010 Wien", desc: "Kanaltour.", img: "drittema.jpg" },
-            { id: "w_a16", city: "Wien", cat: "Aktivität", subtag: "culture", title: "Time Travel Vienna", cost: 20, time: "1h", res: "Nein", address: "Habsburgergasse 10A, 1010 Wien", desc: "5D Show.", img: "timetr.jpg" },
+            // WIEN - ESSEN
+            { id: "w_f1", lat: 48.2100, lng: 16.3683, city: "Wien", cat: "Essen", subtag: "casual", title: "Schwarzes Kameel", cost: 35, time: "1h", res: "Nein", address: "Bognergasse 5, 1010 Wien", desc: "MUST-DO. Stehbuffet, Brötchen & Wein. Society Treff.", img: "schwarzeska.jpg" },
+            { id: "w_f2", lat: 48.2094, lng: 16.3748, city: "Wien", cat: "Essen", subtag: "casual", title: "Figlmüller", cost: 45, time: "1.5h", res: "Zwingend", address: "Wollzeile 5, 1010 Wien", desc: "Heimat des Schnitzels.", img: "figlmller.jpg" },
+            { id: "w_f3", lat: 48.1979, lng: 16.3621, city: "Wien", cat: "Essen", subtag: "casual", title: "Naschmarkt (NENI)", cost: 35, time: "1.5h", res: "Empfohlen", address: "Naschmarkt 510, 1060 Wien", desc: "Israelisch am Markt.", img: "naschmarkt.jpg" },
+            { id: "w_f4", lat: 48.2135, lng: 16.3816, city: "Wien", cat: "Essen", subtag: "fine", title: "Mochi", cost: 80, time: "2h", res: "Zwingend", address: "Praterstraße 15, 1020 Wien", desc: "Bestes Sushi/Fusion.", img: "mochi.jpg" },
+            { id: "w_f5", lat: 48.2048, lng: 16.3436, city: "Wien", cat: "Essen", subtag: "fine", title: "Seven North", cost: 70, time: "2.5h", res: "Empfohlen", address: "Schottenfeldgasse 74, 1070 Wien", desc: "Eyal Shani. Laut, international.", img: "sevenno.jpg" },
+            { id: "w_f6", lat: 48.2025, lng: 16.3492, city: "Wien", cat: "Essen", subtag: "casual", title: "Schnitzelwirt", cost: 30, time: "1h", res: "Nein", address: "Neubaugasse 52, 1070 Wien", desc: "Riesige Portionen, günstig.", img: "schnitzelwirt.jpg" },
+            { id: "w_f7", lat: 48.1987, lng: 16.3663, city: "Wien", cat: "Essen", subtag: "street", title: "Swing Kitchen", cost: 20, time: "45min", res: "Nein", address: "Operngasse 24, 1040 Wien", desc: "Bester veganer Burger.", img: "swingki.jpg" },
+            { id: "w_f8", lat: 48.2022, lng: 16.3676, city: "Wien", cat: "Essen", subtag: "street", title: "Leberkas-Pepi", cost: 8, time: "15min", res: "Nein", address: "Operngasse 12, 1010 Wien", desc: "Bester Leberkäse.", img: "leberkaspepi.jpg" },
+            { id: "w_f9", lat: 48.2030, lng: 16.3549, city: "Wien", cat: "Essen", subtag: "fine", title: "Tian Bistro", cost: 60, time: "2h", res: "Empfohlen", address: "Schrankgasse 4, 1070 Wien", desc: "Vegetarisches Fine Dining.", img: "tianbi.jpg" },
+            { id: "w_f10", lat: 48.2097, lng: 16.3751, city: "Wien", cat: "Essen", subtag: "fine", title: "Lugeck", cost: 50, time: "2h", res: "Zwingend", address: "Lugeck 4, 1010 Wien", desc: "Modernes Wirtshaus.", img: "lugeck.jpg" },
+            { id: "w_f11", lat: 48.1984, lng: 16.3624, city: "Wien", cat: "Essen", subtag: "casual", title: "Café Drechsler", cost: 25, time: "1h", res: "Nein", address: "Linke Wienzeile 22, 1060 Wien", desc: "Klassisches Kaffeehaus.", img: "cafdr.jpg" },
+            { id: "w_f12", lat: 48.1977, lng: 16.3650, city: "Wien", cat: "Essen", subtag: "casual", title: "Vollpension", cost: 25, time: "1.5h", res: "Empfohlen", address: "Schleifmühlgasse 16, 1040 Wien", desc: "Kuchen von Omas.", img: "vollpension.jpg" },
+            { id: "w_f13", lat: 48.2028, lng: 16.3533, city: "Wien", cat: "Essen", subtag: "casual", title: "Ulrich", cost: 35, time: "1.5h", res: "Empfohlen", address: "Sankt-Ulrichs-Platz 1, 1070 Wien", desc: "Top Frühstück.", img: "ulrich.jpg" },
+            { id: "w_f14", lat: 48.2129, lng: 16.3800, city: "Wien", cat: "Essen", subtag: "fine", title: "Das Loft", cost: 60, time: "2h", res: "Zwingend", address: "Praterstraße 1, 1020 Wien", desc: "Teurer Brunch mit Blick.", img: "daslo.jpg" },
+            { id: "w_f15", lat: 48.2139, lng: 16.4016, city: "Wien", cat: "Essen", subtag: "casual", title: "Schweizerhaus", cost: 40, time: "2h", res: "Nein", address: "Prater 116, 1020 Wien", desc: "Stelze und Bier.", img: "schweizerhaus.jpg" },
+            { id: "w_f16", lat: 48.2032, lng: 16.3571, city: "Wien", cat: "Essen", subtag: "casual", title: "Glacis Beisl", cost: 45, time: "2h", res: "Empfohlen", address: "Breite G. 4, 1070 Wien", desc: "Versteckt im MQ.", img: "glacisbe.jpg" },
+            { id: "w_f17", lat: 48.2193, lng: 16.3770, city: "Wien", cat: "Essen", subtag: "street", title: "Pizza Mari", cost: 25, time: "1h", res: "Nein", address: "Leopoldsgasse 23A, 1020 Wien", desc: "Beste Pizza.", img: "pizzamari.jpg" },
+            { id: "w_f18", lat: 48.2109, lng: 16.3771, city: "Wien", cat: "Essen", subtag: "street", title: "Fenster Café", cost: 10, time: "15min", res: "Nein", address: "Griechengasse 10, 1010 Wien", desc: "Kaffee in der Waffel.", img: "fensterca.jpg" },
+            { id: "w_f19", lat: 48.2107, lng: 16.3651, city: "Wien", cat: "Essen", subtag: "casual", title: "Café Central", cost: 30, time: "1h", res: "Nein", address: "Herrengasse 14, 1010 Wien", desc: "Touristisch, aber schön.", img: "cafce.jpg" },
+            { id: "w_f20", lat: 48.2171, lng: 16.3627, city: "Wien", cat: "Essen", subtag: "street", title: "Der Wiener Deewan", cost: 15, time: "45min", res: "Nein", address: "Liechtensteinstraße 10, 1090 Wien", desc: "Pay as you wish.", img: "derwi.jpg" },
+            { id: "w_f21", lat: 48.2046, lng: 16.3683, city: "Wien", cat: "Essen", subtag: "street", title: "Bitzinger", cost: 10, time: "15min", res: "Nein", address: "Albertinaplatz 1, 1010 Wien", desc: "Bester Würstelstand.", img: "bitzinger.jpg" },
+            { id: "w_f22", lat: 48.2026, lng: 16.3591, city: "Wien", cat: "Essen", subtag: "street", title: "Burger Bros", cost: 20, time: "45min", res: "Nein", address: "Museumsplatz 1, 1070 Wien", desc: "Casual Burger.", img: "burgerbr.jpg" },
+            { id: "w_f23", lat: 48.1968, lng: 16.3453, city: "Wien", cat: "Essen", subtag: "street", title: "Ivy's Pho", cost: 20, time: "45min", res: "Nein", address: "Mariahilfer Str. 103, 1060 Wien", desc: "Vietnamesisch.", img: "ivysph.jpg" },
+            { id: "w_f24", lat: 48.2058, lng: 16.3561, city: "Wien", cat: "Essen", subtag: "casual", title: "1500 Foodmakers", cost: 40, time: "1.5h", res: "Empfohlen", address: "Museumstraße 9, 1070 Wien", desc: "Im 25hours Hotel.", img: "1500fo.jpg" },
+            { id: "w_f25", lat: 48.2121, lng: 16.3778, city: "Wien", cat: "Essen", subtag: "fine", title: "Motto am Fluss", cost: 50, time: "2h", res: "Empfohlen", address: "Franz-Josefs-Kai 2, 1010 Wien", desc: "Schiff-Design.", img: "mottoam.jpg" },
+            { id: "w_f26", lat: 48.2002, lng: 16.3617, city: "Wien", cat: "Essen", subtag: "casual", title: "Ramien", cost: 30, time: "1h", res: "Nein", address: "Gumpendorfer Str. 9, 1060 Wien", desc: "Asiatisch.", img: "ramien.jpg" },
 
-            // --- WIEN PARTY ---
-            { id: "w_p1", city: "Wien", cat: "Party", subtag: "club", title: "Volksgarten", cost: 20, time: "Bis 05:00", res: "Nein", address: "Volksgarten, 1010 Wien", desc: "Schicker Club im Park.", img: "volksgarten.jpg" },
-            { id: "w_p2", city: "Wien", cat: "Party", subtag: "club", title: "Grelle Forelle", cost: 20, time: "Bis 06:00", res: "Nein", address: "Spittelauer Lände 12, 1090 Wien", desc: "Techno, Fotoverbot.", img: "grellefo.jpg" },
-            { id: "w_p3", city: "Wien", cat: "Party", subtag: "bar", title: "Travel Shack", cost: 5, time: "Bis 04:00", res: "Nein", address: "Mariahilfer Gürtel 21, 1150 Wien", desc: "Backpacker, Shots.", img: "travelsh.jpg" },
-            { id: "w_p4", city: "Wien", cat: "Party", subtag: "bar", title: "Loos Bar", cost: 20, time: "1h", res: "Nein", address: "Kärntner Durchgang 10, 1010 Wien", desc: "Architektur-Ikone.", img: "loosba.jpg" },
-            { id: "w_p5", city: "Wien", cat: "Party", subtag: "bar", title: "Dachboden", cost: 20, time: "2h", res: "Nein", address: "Lerchenfelder Str. 1-3, 1070 Wien", desc: "Rooftop Bar.", img: "dachboden.jpg" },
-            { id: "w_p6", city: "Wien", cat: "Party", subtag: "bar", title: "Krypt", cost: 25, time: "2h", res: "Nein", address: "Wasagasse 17, 1090 Wien", desc: "Kellerbar.", img: "krypt.jpg" },
-            { id: "w_p7", city: "Wien", cat: "Party", subtag: "club", title: "Sass Music Club", cost: 15, time: "Bis 06:00", res: "Nein", address: "Karlsplatz 1, 1010 Wien", desc: "Elektronisch, intim.", img: "sassmu.jpg" },
-            { id: "w_p8", city: "Wien", cat: "Party", subtag: "club", title: "Prater Dome", cost: 15, time: "Bis 05:00", res: "Nein", address: "Riesenradplatz 7, 1020 Wien", desc: "Großraumdisco.", img: "praterdo.jpg" },
-            { id: "w_p9", city: "Wien", cat: "Party", subtag: "club", title: "Louis Tomlinson", cost: 80, time: "Event", res: "Ticket", address: "Karl-Farkas-Gasse 19, 1030 Wien", desc: "Konzert Marx Halle.", img: "" },
+            // WIEN - AKTIVITÄT
+            { id: "w_a1", lat: 48.2046, lng: 16.3683, city: "Wien", cat: "Aktivität", subtag: "culture", title: "Albertina", cost: 20, time: "2h", res: "Nein", address: "Albertinaplatz 1, 1010 Wien", desc: "Prunkräume & Kunst.", img: "albertina.jpg" },
+            { id: "w_a2", lat: 48.2075, lng: 16.3940, city: "Wien", cat: "Aktivität", subtag: "culture", title: "Hundertwasserhaus", cost: 0, time: "30min", res: "Nein", address: "Kegelgasse 36-38, 1030 Wien", desc: "Architektur Fotos.", img: "hundertwasserhaus.jpg" },
+            { id: "w_a3", lat: 48.2036, lng: 16.4233, city: "Wien", cat: "Aktivität", subtag: "relax", title: "Prater", cost: 30, time: "3h", res: "Nein", address: "1020 Wien", desc: "Vergnügungspark.", img: "prater.jpg" },
+            { id: "w_a4", lat: 48.2160, lng: 16.3513, city: "Wien", cat: "Aktivität", subtag: "culture", title: "Narrenturm", cost: 15, time: "1h", res: "Nein", address: "Spitalgasse 2, 1090 Wien", desc: "Pathologisch-anatomisch.", img: "narrenturm.jpg" },
+            { id: "w_a5", lat: 48.2045, lng: 16.3620, city: "Wien", cat: "Aktivität", subtag: "culture", title: "KHM", cost: 20, time: "2h", res: "Nein", address: "Maria-Theresien-Platz, 1010 Wien", desc: "Kunsthistorisches Museum.", img: "khm.jpg" },
+            { id: "w_a6", lat: 48.1850, lng: 16.3116, city: "Wien", cat: "Aktivität", subtag: "culture", title: "Schloss Schönbrunn", cost: 0, time: "2h", res: "Nein", address: "Schönbrunner Schloßstraße 47, 1130 Wien", desc: "Park ist gratis.", img: "schlosssc.jpg" },
+            { id: "w_a7", lat: 48.1976, lng: 16.3530, city: "Wien", cat: "Aktivität", subtag: "relax", title: "Haus des Meeres", cost: 25, time: "2h", res: "Nein", address: "Fritz-Grünbaum-Platz 1, 1060 Wien", desc: "Aquarium im Flakturm.", img: "hausde.jpg" },
+            { id: "w_a8", lat: 48.1434, lng: 16.4006, city: "Wien", cat: "Aktivität", subtag: "relax", title: "Therme Wien", cost: 40, time: "4h", res: "Nein", address: "Kurbadstraße 14, 1100 Wien", desc: "Moderne Therme.", img: "thermewi.jpg" },
+            { id: "w_a9", lat: 48.1742, lng: 16.3791, city: "Wien", cat: "Aktivität", subtag: "relax", title: "Amalienbad", cost: 10, time: "2h", res: "Nein", address: "Reumannplatz 23, 1100 Wien", desc: "Historisches Hallenbad.", img: "amalienbad.jpg" },
+            { id: "w_a10", lat: 48.2128, lng: 16.3924, city: "Wien", cat: "Aktivität", subtag: "relax", title: "Donaukanal", cost: 0, time: "1h", res: "Nein", address: "Donaukanal, 1010 Wien", desc: "Graffiti & Chillen.", img: "donaukanal.jpg" },
+            { id: "w_a11", lat: 48.1912, lng: 16.3798, city: "Wien", cat: "Aktivität", subtag: "culture", title: "Belvedere", cost: 20, time: "1.5h", res: "Empfohlen", address: "Prinz Eugen-Straße 27, 1030 Wien", desc: "Klimt's Kuss.", img: "belvedere.jpg" },
+            { id: "w_a12", lat: 48.2038, lng: 16.3657, city: "Wien", cat: "Aktivität", subtag: "relax", title: "Schmetterlinghaus", cost: 10, time: "30min", res: "Nein", address: "Hofburg, 1010 Wien", desc: "Im Burggarten.", img: "schmetterlinghaus.jpg" },
+            { id: "w_a13", lat: 48.2057, lng: 16.3627, city: "Wien", cat: "Aktivität", subtag: "culture", title: "Weltmuseum", cost: 15, time: "1.5h", res: "Nein", address: "Heldenplatz, 1010 Wien", desc: "Ethnologie.", img: "weltmuseum.jpg" },
+            { id: "w_a14", lat: 48.2038, lng: 16.3731, city: "Wien", cat: "Aktivität", subtag: "culture", title: "Haus der Musik", cost: 15, time: "1.5h", res: "Nein", address: "Seilerstätte 30, 1010 Wien", desc: "Interaktiv.", img: "hausdermusik.jpg" },
+            { id: "w_a15", lat: 48.2016, lng: 16.3691, city: "Wien", cat: "Aktivität", subtag: "culture", title: "Dritte Mann Tour", cost: 25, time: "1h", res: "Ticket", address: "Karlsplatz, 1010 Wien", desc: "Kanaltour.", img: "drittema.jpg" },
+            { id: "w_a16", lat: 48.2082, lng: 16.3682, city: "Wien", cat: "Aktivität", subtag: "culture", title: "Time Travel Vienna", cost: 20, time: "1h", res: "Nein", address: "Habsburgergasse 10A, 1010 Wien", desc: "5D Show.", img: "timetr.jpg" },
 
-            // --- PRAG ESSEN ---
-            { id: "p_f1", city: "Prag", cat: "Essen", subtag: "casual", title: "Kantýna", cost: 40, time: "1.5h", res: "Nein", address: "Politických vězňů 1511/5, 110 00 Prag", desc: "Carpaccio-Metzgerei in Bank.", img: "kantna.jpg" },
-            { id: "p_f2", city: "Prag", cat: "Essen", subtag: "casual", title: "Lokal Dlouhááá", cost: 25, time: "Open End", res: "Empfohlen", address: "Dlouhá 33, 110 00 Prag", desc: "Frischestes Pilsner Urquell.", img: "lokaldl.jpg" },
-            { id: "p_f3", city: "Prag", cat: "Essen", subtag: "casual", title: "Vytopna Railway", cost: 35, time: "1.5h", res: "Empfohlen", address: "Václavské nám. 802/56, 110 00 Prag", desc: "Wenzelsplatz. Getränke kommen mit Modelleisenbahn.", img: "vytopnara.jpg" },
-            { id: "p_f4", city: "Prag", cat: "Essen", subtag: "fine", title: "Eska", cost: 40, time: "1.5h", res: "Empfohlen", address: "Pernerova 49, 186 00 Prag", desc: "Karlín. Michelin Bib Gourmand, Bäckerei-Restaurant.", img: "eska.jpg" },
-            { id: "p_f5", city: "Prag", cat: "Essen", subtag: "street", title: "Naše Maso", cost: 25, time: "30min", res: "Nein", address: "Dlouhá 39, 110 00 Prag", desc: "Mini-Metzgerei. Hackbraten.", img: "naema.jpg" },
-            { id: "p_f6", city: "Prag", cat: "Essen", subtag: "fine", title: "Field", cost: 120, time: "3h", res: "Zwingend", address: "U Milosrdných 12, 110 00 Prag", desc: "Michelin Stern.", img: "field.jpg" },
-            { id: "p_f7", city: "Prag", cat: "Essen", subtag: "street", title: "Manifesto Market", cost: 30, time: "1h", res: "Nein", address: "Ostrovského 34, 150 00 Prag", desc: "Hipster Food Container Market.", img: "manifestoma.jpg" },
-            { id: "p_f8", city: "Prag", cat: "Essen", subtag: "street", title: "Havelská Koruna", cost: 10, time: "30min", res: "Nein", address: "Havelská 21, 110 00 Prag", desc: "Tschechische Klassiker, Kantine, billig & schnell.", img: "havelskko.jpg" },
-            { id: "p_f9", city: "Prag", cat: "Essen", subtag: "street", title: "Banh Mi Ba", cost: 15, time: "45min", res: "Nein", address: "Rybná 26, 110 00 Prag", desc: "Super vietnamesisches Essen (große Community in Prag).", img: "banhmi.jpg" },
-            { id: "p_f10", city: "Prag", cat: "Essen", subtag: "casual", title: "Kuchyň", cost: 40, time: "1.5h", res: "Empfohlen", address: "Hradčanské nám. 1, 118 00 Prag", desc: "Auf der Burg. Tolle Aussicht, Essen aus Töpfen.", img: "kuchy.jpg" },
-            { id: "p_f11", city: "Prag", cat: "Essen", subtag: "casual", title: "Pork's", cost: 30, time: "1.5h", res: "Empfohlen", address: "Mostecká 16, 118 00 Prag", desc: "Haxe.", img: "porks.jpg" },
-            { id: "p_f12", city: "Prag", cat: "Essen", subtag: "fine", title: "Sia", cost: 50, time: "2h", res: "Empfohlen", address: "V Celnici 1034/6, 110 00 Prag", desc: "Asiatisch.", img: "sia.jpg" },
-            { id: "p_f13", city: "Prag", cat: "Essen", subtag: "casual", title: "The Tavern", cost: 25, time: "1h", res: "Nein", address: "Chopinova 26, 120 00 Prag", desc: "Burger.", img: "theta.jpg" },
-            { id: "p_f14", city: "Prag", cat: "Essen", subtag: "casual", title: "Kro Kitchen", cost: 25, time: "1h", res: "Nein", address: "Vinohradská 66, 130 00 Prag", desc: "Rotisserie.", img: "kroki.jpg" },
-            { id: "p_f15", city: "Prag", cat: "Essen", subtag: "casual", title: "T-Anker", cost: 30, time: "1.5h", res: "Empfohlen", address: "Náměstí Republiky 8, 110 00 Prag", desc: "Dachterrasse.", img: "tanker.jpg" },
-            { id: "p_f16", city: "Prag", cat: "Essen", subtag: "casual", title: "Vinohradský Parlament", cost: 30, time: "1.5h", res: "Empfohlen", address: "Korunní 1, 120 00 Prag", desc: "Gute Knödelgerichte.", img: "vinohradskpa.jpg" },
-            { id: "p_f17", city: "Prag", cat: "Essen", subtag: "casual", title: "Las Adelitas", cost: 30, time: "1.5h", res: "Empfohlen", address: "Americká 8, 120 00 Prag", desc: "Guter Mexikaner.", img: "lasad.jpg" },
-            { id: "p_f18", city: "Prag", cat: "Essen", subtag: "street", title: "Mr. HotDog", cost: 20, time: "1h", res: "Nein", address: "Kamenická 24, 170 00 Prag", desc: "Hotdogs.", img: "mrho.jpg" },
-            { id: "p_f19", city: "Prag", cat: "Essen", subtag: "street", title: "Sisters Bistro", cost: 15, time: "30min", res: "Nein", address: "Dlouhá 39, 110 00 Prag", desc: "Brötchen.", img: "sistersbi.jpg" },
-            { id: "p_f20", city: "Prag", cat: "Essen", subtag: "street", title: "Bageterie Boulevard", cost: 10, time: "15min", res: "Nein", address: "Václavské nám. 56, 110 00 Prag", desc: "Baguettes.", img: "bageteriebo.jpg" },
-            { id: "p_f21", city: "Prag", cat: "Essen", subtag: "street", title: "Burrito Loco", cost: 10, time: "15min", res: "Nein", address: "Štefánikova 230/7, 150 00 Prag", desc: "Burritos.", img: "burritolo.jpg" },
-            { id: "p_f22", city: "Prag", cat: "Essen", subtag: "casual", title: "Bistro Monk", cost: 30, time: "1h", res: "Empfohlen", address: "Michalská 20, 110 00 Prag", desc: "Frühstück.", img: "bistromo.jpg" },
-            { id: "p_f23", city: "Prag", cat: "Essen", subtag: "casual", title: "Venue", cost: 30, time: "1h", res: "Nein", address: "Havelská 4, 110 00 Prag", desc: "Brunch.", img: "venue.jpg" },
-            { id: "p_f24", city: "Prag", cat: "Essen", subtag: "street", title: "Bakeshop", cost: 25, time: "30min", res: "Nein", address: "Kozí 1, 110 00 Prag", desc: "Bäckerei.", img: "bakeshop.jpg" },
-            { id: "p_f25", city: "Prag", cat: "Essen", subtag: "fine", title: "Café Savoy", cost: 40, time: "1.5h", res: "Empfohlen", address: "Vítězná 5, 150 00 Prag", desc: "Imperial.", img: "cafsa.jpg" },
-            { id: "p_f26", city: "Prag", cat: "Essen", subtag: "street", title: "Super Tramp Coffee", cost: 10, time: "30min", res: "Nein", address: "Opatovická 160/18, 110 00 Prag", desc: "Kaffee.", img: "supertr.jpg" },
-            { id: "p_f27", city: "Prag", cat: "Essen", subtag: "street", title: "Coffee Room", cost: 15, time: "45min", res: "Nein", address: "Korunní 74, 101 00 Prag", desc: "Avocado Toast.", img: "coffeero.jpg" },
-            { id: "p_f28", city: "Prag", cat: "Essen", subtag: "casual", title: "U Kroka", cost: 25, time: "1.5h", res: "Zwingend", address: "Vratislavova 12/28, 128 00 Prag", desc: "Abseits des Zentrums. Top Preis.", img: "ukr.jpg" },
-            { id: "p_f29", city: "Prag", cat: "Essen", subtag: "fine", title: "Lehká Hlava", cost: 30, time: "1.5h", res: "Empfohlen", address: "Boršov 280/2, 110 00 Prag", desc: "Vegetarisch, spacig.", img: "lehkhl.jpg" },
+            // WIEN - PARTY
+            { id: "w_p1", lat: 48.2067, lng: 16.3605, city: "Wien", cat: "Party", subtag: "club", title: "Volksgarten", cost: 20, time: "Bis 05:00", res: "Nein", address: "Volksgarten, 1010 Wien", desc: "Schicker Club im Park.", img: "volksgarten.jpg" },
+            { id: "w_p2", lat: 48.2348, lng: 16.3608, city: "Wien", cat: "Party", subtag: "club", title: "Grelle Forelle", cost: 20, time: "Bis 06:00", res: "Nein", address: "Spittelauer Lände 12, 1090 Wien", desc: "Techno, Fotoverbot.", img: "grellefo.jpg" },
+            { id: "w_p3", lat: 48.1926, lng: 16.3377, city: "Wien", cat: "Party", subtag: "bar", title: "Travel Shack", cost: 5, time: "Bis 04:00", res: "Nein", address: "Mariahilfer Gürtel 21, 1150 Wien", desc: "Backpacker, Shots.", img: "travelsh.jpg" },
+            { id: "w_p4", lat: 48.2072, lng: 16.3712, city: "Wien", cat: "Party", subtag: "bar", title: "Loos Bar", cost: 20, time: "1h", res: "Nein", address: "Kärntner Durchgang 10, 1010 Wien", desc: "Architektur-Ikone.", img: "loosba.jpg" },
+            { id: "w_p5", lat: 48.2065, lng: 16.3546, city: "Wien", cat: "Party", subtag: "bar", title: "Dachboden", cost: 20, time: "2h", res: "Nein", address: "Lerchenfelder Str. 1-3, 1070 Wien", desc: "Rooftop Bar.", img: "dachboden.jpg" },
+            { id: "w_p6", lat: 48.2178, lng: 16.3602, city: "Wien", cat: "Party", subtag: "bar", title: "Krypt", cost: 25, time: "2h", res: "Nein", address: "Wasagasse 17, 1090 Wien", desc: "Kellerbar.", img: "krypt.jpg" },
+            { id: "w_p7", lat: 48.2011, lng: 16.3695, city: "Wien", cat: "Party", subtag: "club", title: "Sass Music Club", cost: 15, time: "Bis 06:00", res: "Nein", address: "Karlsplatz 1, 1010 Wien", desc: "Elektronisch, intim.", img: "sassmu.jpg" },
+            { id: "w_p8", lat: 48.2174, lng: 16.3974, city: "Wien", cat: "Party", subtag: "club", title: "Prater Dome", cost: 15, time: "Bis 05:00", res: "Nein", address: "Riesenradplatz 7, 1020 Wien", desc: "Großraumdisco.", img: "praterdo.jpg" },
+            { id: "w_p9", lat: 48.1875, lng: 16.4051, city: "Wien", cat: "Party", subtag: "club", title: "Louis Tomlinson", cost: 80, time: "Event", res: "Ticket", address: "Karl-Farkas-Gasse 19, 1030 Wien", desc: "Konzert Marx Halle.", img: "" },
 
-            // --- PRAG AKTIVITÄT ---
-            { id: "p_a1", city: "Prag", cat: "Aktivität", subtag: "relax", title: "Bier Spa Bernard", cost: 90, time: "1h", res: "Zwingend", address: "Týn 10, 110 00 Prag", desc: "Baden in Bier.", img: "biersp.jpg" },
-            { id: "p_a2", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Nuklearbunker Tour", cost: 25, time: "2h", res: "Ticket", address: "Václavské nám. 45 (Hotel Jalta), 110 00 Prag", desc: "Ex-Sowjet Bunker.", img: "nuklearbunkerto.jpg" },
-            { id: "p_a3", city: "Prag", cat: "Aktivität", subtag: "relax", title: "Tretboot fahren", cost: 20, time: "1h", res: "Nein", address: "Slovanský ostrov, 110 00 Prag", desc: "Auf der Moldau (Slovanský Insel).", img: "tretbootfa.jpg" },
-            { id: "p_a4", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Museum of Fantastic Illusions", cost: 15, time: "1h", res: "Nein", address: "Vodičkova 31, 110 00 Prag", desc: "Lustige Fotos.", img: "museumofprag.jpg" }, // Mapped to prag version
-            { id: "p_a5", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Altstädter Brückenturm", cost: 10, time: "45min", res: "Nein", address: "Karlův most, 110 00 Prag", desc: "Aufstieg für den Karlsbrücke-Blick.", img: "altstdterbr.jpg" },
-            { id: "p_a6", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Museum des Kommunismus", cost: 15, time: "1.5h", res: "Nein", address: "V Celnici 1031/4, 110 00 Prag", desc: "Geschichte der CSSR.", img: "museumde.jpg" },
-            { id: "p_a7", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Paternoster Aufzug", cost: 0, time: "15min", res: "Nein", address: "Mariánské nám. 2, 110 00 Prag", desc: "Im Rathaus. Aufzug ohne Türen.", img: "paternosterau.jpg" },
-            { id: "p_a8", city: "Prag", cat: "Aktivität", subtag: "culture", title: "DOX Centre for Art", cost: 20, time: "2h", res: "Nein", address: "Poupětova 1, 170 00 Prag", desc: "Holešovice. Luftschiff auf dem Dach.", img: "doxce.jpg" },
-            { id: "p_a9", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Magical Cavern", cost: 10, time: "45min", res: "Nein", address: "Petřín, 118 00 Prag", desc: "Psychedelisch.", img: "magicalca.jpg" },
-            { id: "p_a10", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Idiom Installation", cost: 0, time: "15min", res: "Nein", address: "Mariánské nám. 1, 110 00 Prag", desc: "Unendlicher Bücherturm in der Bibliothek.", img: "idiomin.jpg" },
-            { id: "p_a11", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Fernsehturm Žižkov", cost: 15, time: "1h", res: "Nein", address: "Mahlerovy sady 1, 130 00 Prag", desc: "Babys.", img: "fernsehturmik.jpg" },
-            { id: "p_a12", city: "Prag", cat: "Aktivität", subtag: "relax", title: "Letná Park", cost: 0, time: "1h", res: "Nein", address: "Letná, 170 00 Prag", desc: "Metronom.", img: "letnpa.jpg" },
-            { id: "p_a13", city: "Prag", cat: "Aktivität", subtag: "culture", title: "John Lennon Wall", cost: 0, time: "30min", res: "Nein", address: "Velkopřevorské nám., 118 00 Prag", desc: "Graffiti.", img: "johnle.jpg" },
-            { id: "p_a14", city: "Prag", cat: "Aktivität", subtag: "relax", title: "Palladium", cost: 0, time: "1h", res: "Nein", address: "Náměstí Republiky 1, 110 00 Prag", desc: "Shopping.", img: "palladium.jpg" },
-            { id: "p_a15", city: "Prag", cat: "Aktivität", subtag: "culture", title: "Nationalmuseum", cost: 20, time: "2h", res: "Nein", address: "Václavské nám. 68, 110 00 Prag", desc: "Prunkbau.", img: "nationalmuseum.jpg" },
-            { id: "p_a16", city: "Prag", cat: "Aktivität", subtag: "relax", title: "Sauna Spot Dvorce", cost: 35, time: "2h", res: "Empfohlen", address: "Podolské nábř. 1184/5, 147 00 Prag", desc: "Sauna an der Moldau.", img: "saunasp.jpg" },
-            { id: "p_a17", city: "Prag", cat: "Aktivität", subtag: "relax", title: "Infinit Maximus", cost: 50, time: "4h", res: "Empfohlen", address: "Hrázní 327/4a, 635 00 Brno", desc: "Riesige Saunawelt.", img: "infinitma.jpg" },
+            // PRAG - ESSEN
+            { id: "p_f1", lat: 50.0834, lng: 14.4287, city: "Prag", cat: "Essen", subtag: "casual", title: "Kantýna", cost: 40, time: "1.5h", res: "Nein", address: "Politických vězňů 1511/5, 110 00 Prag", desc: "Carpaccio-Metzgerei in Bank.", img: "kantna.jpg" },
+            { id: "p_f2", lat: 50.0907, lng: 14.4259, city: "Prag", cat: "Essen", subtag: "casual", title: "Lokal Dlouhááá", cost: 25, time: "Open End", res: "Empfohlen", address: "Dlouhá 33, 110 00 Prag", desc: "Frischestes Pilsner Urquell.", img: "lokaldl.jpg" },
+            { id: "p_f3", lat: 50.0801, lng: 14.4286, city: "Prag", cat: "Essen", subtag: "casual", title: "Vytopna Railway", cost: 35, time: "1.5h", res: "Empfohlen", address: "Václavské nám. 802/56, 110 00 Prag", desc: "Wenzelsplatz. Getränke kommen mit Modelleisenbahn.", img: "vytopnara.jpg" },
+            { id: "p_f4", lat: 50.0913, lng: 14.4544, city: "Prag", cat: "Essen", subtag: "fine", title: "Eska", cost: 40, time: "1.5h", res: "Empfohlen", address: "Pernerova 49, 186 00 Prag", desc: "Karlín. Michelin Bib Gourmand, Bäckerei-Restaurant.", img: "eska.jpg" },
+            { id: "p_f5", lat: 50.0912, lng: 14.4268, city: "Prag", cat: "Essen", subtag: "street", title: "Naše Maso", cost: 25, time: "30min", res: "Nein", address: "Dlouhá 39, 110 00 Prag", desc: "Mini-Metzgerei. Hackbraten.", img: "naema.jpg" },
+            { id: "p_f6", lat: 50.0917, lng: 14.4219, city: "Prag", cat: "Essen", subtag: "fine", title: "Field", cost: 120, time: "3h", res: "Zwingend", address: "U Milosrdných 12, 110 00 Prag", desc: "Michelin Stern.", img: "field.jpg" },
+            { id: "p_f7", lat: 50.0693, lng: 14.4036, city: "Prag", cat: "Essen", subtag: "street", title: "Manifesto Market", cost: 30, time: "1h", res: "Nein", address: "Ostrovského 34, 150 00 Prag", desc: "Hipster Food Container Market.", img: "manifestoma.jpg" },
+            { id: "p_f8", lat: 50.0855, lng: 14.4216, city: "Prag", cat: "Essen", subtag: "street", title: "Havelská Koruna", cost: 10, time: "30min", res: "Nein", address: "Havelská 21, 110 00 Prag", desc: "Tschechische Klassiker, Kantine, billig & schnell.", img: "havelskko.jpg" },
+            { id: "p_f9", lat: 50.0904, lng: 14.4260, city: "Prag", cat: "Essen", subtag: "street", title: "Banh Mi Ba", cost: 15, time: "45min", res: "Nein", address: "Rybná 26, 110 00 Prag", desc: "Super vietnamesisches Essen (große Community in Prag).", img: "banhmi.jpg" },
+            { id: "p_f10", lat: 50.0892, lng: 14.3979, city: "Prag", cat: "Essen", subtag: "casual", title: "Kuchyň", cost: 40, time: "1.5h", res: "Empfohlen", address: "Hradčanské nám. 1, 118 00 Prag", desc: "Auf der Burg. Tolle Aussicht, Essen aus Töpfen.", img: "kuchy.jpg" },
+            { id: "p_f11", lat: 50.0874, lng: 14.4060, city: "Prag", cat: "Essen", subtag: "casual", title: "Pork's", cost: 30, time: "1.5h", res: "Empfohlen", address: "Mostecká 16, 118 00 Prag", desc: "Haxe.", img: "porks.jpg" },
+            { id: "p_f12", lat: 50.0890, lng: 14.4320, city: "Prag", cat: "Essen", subtag: "fine", title: "Sia", cost: 50, time: "2h", res: "Empfohlen", address: "V Celnici 1034/6, 110 00 Prag", desc: "Asiatisch.", img: "sia.jpg" },
+            { id: "p_f13", lat: 50.0812, lng: 14.4443, city: "Prag", cat: "Essen", subtag: "casual", title: "The Tavern", cost: 25, time: "1h", res: "Nein", address: "Chopinova 26, 120 00 Prag", desc: "Burger.", img: "theta.jpg" },
+            { id: "p_f14", lat: 50.0771, lng: 14.4508, city: "Prag", cat: "Essen", subtag: "casual", title: "Kro Kitchen", cost: 25, time: "1h", res: "Nein", address: "Vinohradská 66, 130 00 Prag", desc: "Rotisserie.", img: "kroki.jpg" },
+            { id: "p_f15", lat: 50.0887, lng: 14.4274, city: "Prag", cat: "Essen", subtag: "casual", title: "T-Anker", cost: 30, time: "1.5h", res: "Empfohlen", address: "Náměstí Republiky 8, 110 00 Prag", desc: "Dachterrasse.", img: "tanker.jpg" },
+            { id: "p_f16", lat: 50.0755, lng: 14.4384, city: "Prag", cat: "Essen", subtag: "casual", title: "Vinohradský Parlament", cost: 30, time: "1.5h", res: "Empfohlen", address: "Korunní 1, 120 00 Prag", desc: "Gute Knödelgerichte.", img: "vinohradskpa.jpg" },
+            { id: "p_f17", lat: 50.0715, lng: 14.4391, city: "Prag", cat: "Essen", subtag: "casual", title: "Las Adelitas", cost: 30, time: "1.5h", res: "Empfohlen", address: "Americká 8, 120 00 Prag", desc: "Guter Mexikaner.", img: "lasad.jpg" },
+            { id: "p_f18", lat: 50.0995, lng: 14.4277, city: "Prag", cat: "Essen", subtag: "street", title: "Mr. HotDog", cost: 20, time: "1h", res: "Nein", address: "Kamenická 24, 170 00 Prag", desc: "Hotdogs.", img: "mrho.jpg" },
+            { id: "p_f19", lat: 50.0912, lng: 14.4268, city: "Prag", cat: "Essen", subtag: "street", title: "Sisters Bistro", cost: 15, time: "30min", res: "Nein", address: "Dlouhá 39, 110 00 Prag", desc: "Brötchen.", img: "sistersbi.jpg" },
+            { id: "p_f20", lat: 50.0801, lng: 14.4287, city: "Prag", cat: "Essen", subtag: "street", title: "Bageterie Boulevard", cost: 10, time: "15min", res: "Nein", address: "Václavské nám. 56, 110 00 Prag", desc: "Baguettes.", img: "bageteriebo.jpg" },
+            { id: "p_f21", lat: 50.0727, lng: 14.4037, city: "Prag", cat: "Essen", subtag: "street", title: "Burrito Loco", cost: 10, time: "15min", res: "Nein", address: "Štefánikova 230/7, 150 00 Prag", desc: "Burritos.", img: "burritolo.jpg" },
+            { id: "p_f22", lat: 50.0858, lng: 14.4200, city: "Prag", cat: "Essen", subtag: "casual", title: "Bistro Monk", cost: 30, time: "1h", res: "Empfohlen", address: "Michalská 20, 110 00 Prag", desc: "Frühstück.", img: "bistromo.jpg" },
+            { id: "p_f23", lat: 50.0843, lng: 14.4206, city: "Prag", cat: "Essen", subtag: "casual", title: "Venue", cost: 30, time: "1h", res: "Nein", address: "Havelská 4, 110 00 Prag", desc: "Brunch.", img: "venue.jpg" },
+            { id: "p_f24", lat: 50.0898, lng: 14.4224, city: "Prag", cat: "Essen", subtag: "street", title: "Bakeshop", cost: 25, time: "30min", res: "Nein", address: "Kozí 1, 110 00 Prag", desc: "Bäckerei.", img: "bakeshop.jpg" },
+            { id: "p_f25", lat: 50.0810, lng: 14.4072, city: "Prag", cat: "Essen", subtag: "fine", title: "Café Savoy", cost: 40, time: "1.5h", res: "Empfohlen", address: "Vítězná 5, 150 00 Prag", desc: "Imperial.", img: "cafsa.jpg" },
+            { id: "p_f26", lat: 50.0794, lng: 14.4189, city: "Prag", cat: "Essen", subtag: "street", title: "Super Tramp Coffee", cost: 10, time: "30min", res: "Nein", address: "Opatovická 160/18, 110 00 Prag", desc: "Kaffee.", img: "supertr.jpg" },
+            { id: "p_f27", lat: 50.0753, lng: 14.4513, city: "Prag", cat: "Essen", subtag: "street", title: "Coffee Room", cost: 15, time: "45min", res: "Nein", address: "Korunní 74, 101 00 Prag", desc: "Avocado Toast.", img: "coffeero.jpg" },
+            { id: "p_f28", lat: 50.0654, lng: 14.4199, city: "Prag", cat: "Essen", subtag: "casual", title: "U Kroka", cost: 25, time: "1.5h", res: "Zwingend", address: "Vratislavova 12/28, 128 00 Prag", desc: "Abseits des Zentrums. Top Preis.", img: "ukr.jpg" },
+            { id: "p_f29", lat: 50.0841, lng: 14.4145, city: "Prag", cat: "Essen", subtag: "fine", title: "Lehká Hlava", cost: 30, time: "1.5h", res: "Empfohlen", address: "Boršov 280/2, 110 00 Prag", desc: "Vegetarisch, spacig.", img: "lehkhl.jpg" },
 
-            // --- PRAG PARTY ---
-            { id: "p_p1", city: "Prag", cat: "Party", subtag: "club", title: "Cross Club", cost: 15, time: "Bis 06:00", res: "Nein", address: "Plynární 1096/23, 170 00 Prag", desc: "Steampunk D&B.", img: "crosscl.jpg" },
-            { id: "p_p2", city: "Prag", cat: "Party", subtag: "bar", title: "Hemingway Bar", cost: 40, time: "2h", res: "Zwingend", address: "Karolíny Světlé 26, 110 00 Prag", desc: "Absinth-Cocktails.", img: "hemingwayba.jpg" },
-            { id: "p_p3", city: "Prag", cat: "Party", subtag: "bar", title: "Anonymous Bar", cost: 30, time: "2h", res: "Empfohlen", address: "Michalská 12, 110 00 Prag", desc: "Hidden Bar.", img: "anonymousba.jpg" },
-            { id: "p_p4", city: "Prag", cat: "Party", subtag: "bar", title: "U Sudu", cost: 10, time: "Open End", res: "Nein", address: "Vodičkova 677/10, 110 00 Prag", desc: "Höhlenbar.", img: "usu.jpg" },
-            { id: "p_p5", city: "Prag", cat: "Party", subtag: "bar", title: "Jazz Dock", cost: 25, time: "2h", res: "Ticket", address: "Janáčkovo nábř. 3249/2, 150 00 Prag", desc: "Am Wasser.", img: "jazzdo.jpg" },
-            { id: "p_p6", city: "Prag", cat: "Party", subtag: "bar", title: "Black Angel's", cost: 40, time: "2h", res: "Nein", address: "Staroměstské nám. 29, 110 00 Prag", desc: "Gothic.", img: "blackan.jpg" },
-            { id: "p_p7", city: "Prag", cat: "Party", subtag: "club", title: "Karlovy Lazne", cost: 25, time: "Bis 05:00", res: "Nein", address: "Novotného lávka 198/5, 110 00 Prag", desc: "5-Stock.", img: "karlovyla.jpg" },
-            { id: "p_p8", city: "Prag", cat: "Party", subtag: "club", title: "Paul Simon Konzert", cost: 90, time: "Event", res: "Ticket", address: "Kongresszentrum, Prag", desc: "Konzert.", img: "" }, 
-            { id: "p_p9", city: "Prag", cat: "Party", subtag: "club", title: "Epic Prague", cost: 25, time: "Bis 05:00", res: "Ticket", address: "Revoluční 1003/3, 110 00 Prag", desc: "EDM.", img: "epicpr.jpg" }
+            // PRAG - AKTIVITÄT
+            { id: "p_a1", lat: 50.0880, lng: 14.4241, city: "Prag", cat: "Aktivität", subtag: "relax", title: "Bier Spa Bernard", cost: 90, time: "1h", res: "Zwingend", address: "Týn 10, 110 00 Prag", desc: "Baden in Bier.", img: "biersp.jpg" },
+            { id: "p_a2", lat: 50.0813, lng: 14.4285, city: "Prag", cat: "Aktivität", subtag: "culture", title: "Nuklearbunker Tour", cost: 25, time: "2h", res: "Ticket", address: "Václavské nám. 45 (Hotel Jalta), 110 00 Prag", desc: "Ex-Sowjet Bunker.", img: "nuklearbunkerto.jpg" },
+            { id: "p_a3", lat: 50.0789, lng: 14.4132, city: "Prag", cat: "Aktivität", subtag: "relax", title: "Tretboot fahren", cost: 20, time: "1h", res: "Nein", address: "Slovanský ostrov, 110 00 Prag", desc: "Auf der Moldau (Slovanský Insel).", img: "tretbootfa.jpg" },
+            { id: "p_a4", lat: 50.0813, lng: 14.4243, city: "Prag", cat: "Aktivität", subtag: "culture", title: "Museum of Fantastic Illusions", cost: 15, time: "1h", res: "Nein", address: "Vodičkova 31, 110 00 Prag", desc: "Lustige Fotos.", img: "museumofprag.jpg" },
+            { id: "p_a5", lat: 50.0862, lng: 14.4138, city: "Prag", cat: "Aktivität", subtag: "culture", title: "Altstädter Brückenturm", cost: 10, time: "45min", res: "Nein", address: "Karlův most, 110 00 Prag", desc: "Aufstieg für den Karlsbrücke-Blick.", img: "altstdterbr.jpg" },
+            { id: "p_a6", lat: 50.0880, lng: 14.4300, city: "Prag", cat: "Aktivität", subtag: "culture", title: "Museum des Kommunismus", cost: 15, time: "1.5h", res: "Nein", address: "V Celnici 1031/4, 110 00 Prag", desc: "Geschichte der CSSR.", img: "museumde.jpg" },
+            { id: "p_a7", lat: 50.0871, lng: 14.4178, city: "Prag", cat: "Aktivität", subtag: "culture", title: "Paternoster Aufzug", cost: 0, time: "15min", res: "Nein", address: "Mariánské nám. 2, 110 00 Prag", desc: "Im Rathaus. Aufzug ohne Türen.", img: "paternosterau.jpg" },
+            { id: "p_a8", lat: 50.1068, lng: 14.4476, city: "Prag", cat: "Aktivität", subtag: "culture", title: "DOX Centre for Art", cost: 20, time: "2h", res: "Nein", address: "Poupětova 1, 170 00 Prag", desc: "Holešovice. Luftschiff auf dem Dach.", img: "doxce.jpg" },
+            { id: "p_a9", lat: 50.0787, lng: 14.4028, city: "Prag", cat: "Aktivität", subtag: "culture", title: "Magical Cavern", cost: 10, time: "45min", res: "Nein", address: "Petřín, 118 00 Prag", desc: "Psychedelisch.", img: "magicalca.jpg" },
+            { id: "p_a10", lat: 50.0874, lng: 14.4174, city: "Prag", cat: "Aktivität", subtag: "culture", title: "Idiom Installation", cost: 0, time: "15min", res: "Nein", address: "Mariánské nám. 1, 110 00 Prag", desc: "Unendlicher Bücherturm in der Bibliothek.", img: "idiomin.jpg" },
+            { id: "p_a11", lat: 50.0810, lng: 14.4511, city: "Prag", cat: "Aktivität", subtag: "culture", title: "Fernsehturm Žižkov", cost: 15, time: "1h", res: "Nein", address: "Mahlerovy sady 1, 130 00 Prag", desc: "Babys.", img: "fernsehturmik.jpg" },
+            { id: "p_a12", lat: 50.0981, lng: 14.4142, city: "Prag", cat: "Aktivität", subtag: "relax", title: "Letná Park", cost: 0, time: "1h", res: "Nein", address: "Letná, 170 00 Prag", desc: "Metronom.", img: "letnpa.jpg" },
+            { id: "p_a13", lat: 50.0861, lng: 14.4065, city: "Prag", cat: "Aktivität", subtag: "culture", title: "John Lennon Wall", cost: 0, time: "30min", res: "Nein", address: "Velkopřevorské nám., 118 00 Prag", desc: "Graffiti.", img: "johnle.jpg" },
+            { id: "p_a14", lat: 50.0891, lng: 14.4287, city: "Prag", cat: "Aktivität", subtag: "relax", title: "Palladium", cost: 0, time: "1h", res: "Nein", address: "Náměstí Republiky 1, 110 00 Prag", desc: "Shopping.", img: "palladium.jpg" },
+            { id: "p_a15", lat: 50.0789, lng: 14.4310, city: "Prag", cat: "Aktivität", subtag: "culture", title: "Nationalmuseum", cost: 20, time: "2h", res: "Nein", address: "Václavské nám. 68, 110 00 Prag", desc: "Prunkbau.", img: "nationalmuseum.jpg" },
+            { id: "p_a16", lat: 50.0526, lng: 14.4146, city: "Prag", cat: "Aktivität", subtag: "relax", title: "Sauna Spot Dvorce", cost: 35, time: "2h", res: "Empfohlen", address: "Podolské nábř. 1184/5, 147 00 Prag", desc: "Sauna an der Moldau.", img: "saunasp.jpg" },
+            { id: "p_a17", lat: 49.2434, lng: 16.5155, city: "Prag", cat: "Aktivität", subtag: "relax", title: "Infinit Maximus", cost: 50, time: "4h", res: "Empfohlen", address: "Hrázní 327/4a, 635 00 Brno", desc: "Riesige Saunawelt.", img: "infinitma.jpg" },
+
+            // PRAG - PARTY
+            { id: "p_p1", lat: 50.1082, lng: 14.4432, city: "Prag", cat: "Party", subtag: "club", title: "Cross Club", cost: 15, time: "Bis 06:00", res: "Nein", address: "Plynární 1096/23, 170 00 Prag", desc: "Steampunk D&B.", img: "crosscl.jpg" },
+            { id: "p_p2", lat: 50.0840, lng: 14.4143, city: "Prag", cat: "Party", subtag: "bar", title: "Hemingway Bar", cost: 40, time: "2h", res: "Zwingend", address: "Karolíny Světlé 26, 110 00 Prag", desc: "Absinth-Cocktails.", img: "hemingwayba.jpg" },
+            { id: "p_p3", lat: 50.0852, lng: 14.4200, city: "Prag", cat: "Party", subtag: "bar", title: "Anonymous Bar", cost: 30, time: "2h", res: "Empfohlen", address: "Michalská 12, 110 00 Prag", desc: "Hidden Bar.", img: "anonymousba.jpg" },
+            { id: "p_p4", lat: 50.0790, lng: 14.4222, city: "Prag", cat: "Party", subtag: "bar", title: "U Sudu", cost: 10, time: "Open End", res: "Nein", address: "Vodičkova 677/10, 110 00 Prag", desc: "Höhlenbar.", img: "usu.jpg" },
+            { id: "p_p5", lat: 50.0768, lng: 14.4082, city: "Prag", cat: "Party", subtag: "bar", title: "Jazz Dock", cost: 25, time: "2h", res: "Ticket", address: "Janáčkovo nábř. 3249/2, 150 00 Prag", desc: "Am Wasser.", img: "jazzdo.jpg" },
+            { id: "p_p6", lat: 50.0864, lng: 14.4202, city: "Prag", cat: "Party", subtag: "club", title: "Black Angel's", cost: 40, time: "2h", res: "Nein", address: "Staroměstské nám. 29, 110 00 Prag", desc: "Gothic.", img: "blackan.jpg" },
+            { id: "p_p7", lat: 50.0854, lng: 14.4139, city: "Prag", cat: "Party", subtag: "club", title: "Karlovy Lazne", cost: 25, time: "Bis 05:00", res: "Nein", address: "Novotného lávka 198/5, 110 00 Prag", desc: "5-Stock.", img: "karlovyla.jpg" },
+            { id: "p_p8", lat: 50.0625, lng: 14.4297, city: "Prag", cat: "Party", subtag: "club", title: "Paul Simon Konzert", cost: 90, time: "Event", res: "Ticket", address: "Kongresszentrum, Prag", desc: "Konzert.", img: "" }, 
+            { id: "p_p9", lat: 50.0898, lng: 14.4278, city: "Prag", cat: "Party", subtag: "club", title: "Epic Prague", cost: 25, time: "Bis 05:00", res: "Ticket", address: "Revoluční 1003/3, 110 00 Prag", desc: "EDM.", img: "epicpr.jpg" }
         ];
 
         // --- COMPONENTS ---
@@ -289,20 +313,20 @@
             if (!isVisible) return null;
 
             return (
-                <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full shadow-xl z-[100] text-sm font-bold flex items-center gap-2 toast-enter">
+                <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full shadow-xl z-[9999] text-sm font-bold flex items-center gap-2 toast-enter">
                     <span>{message}</span>
                 </div>
             );
         };
 
-        // --- TIKTOK ICON (Custom SVG) ---
+        // --- TIKTOK ICON ---
         const TikTokIcon = () => (
             <svg viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3">
                 <path d="M12.525.02c1.31-.02 2.61-.01 3.918.02.08 1.84 1.256 3.24 3.42 3.74V7.9c-1.63-.02-2.924-.6-3.879-1.92V12.9c0 3.32-3.11 5.76-6.618 4.69C7.38 17 6.13 14.88 7.5 12.3c.75-1.42 2.13-2.22 3.82-2.06V7c-3.14-.35-6.66 2.36-6.62 6.58.04 4.34 4.29 7.37 8.28 6.44 3.2-.74 5.38-3.9 5.25-7.74V4.68c2.16.03 4.14 1.3 5.09 3.5v-4.8c-.85-.18-1.7-.28-2.56-.28-1.5 0-2.88.58-4.04 1.58V0h-3.918z"/>
             </svg>
         );
 
-        // --- GOOGLE ICON (Custom SVG) ---
+        // --- GOOGLE ICON ---
         const GoogleIcon = () => (
             <svg viewBox="0 0 24 24" className="w-3 h-3">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -311,6 +335,104 @@
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
             </svg>
         );
+
+        // --- MAP COMPONENT (New) ---
+        const MapView = ({ items, activeCity }) => {
+            const mapRef = useRef(null);
+            const markersRef = useRef(L.featureGroup());
+
+            // Coordinates for cities to fly to
+            const CITY_COORDS = {
+                "Budapest": [47.4979, 19.0402],
+                "Wien": [48.2082, 16.3738],
+                "Prag": [50.0755, 14.4378],
+                "Transfer": [48.2082, 16.3738] // Default center
+            };
+
+            const getEmoji = (cat) => {
+                switch(cat) {
+                    case 'Essen': return '🍔';
+                    case 'Aktivität': return '🏰';
+                    case 'Party': return '🍸';
+                    case 'Transport': return '🚆';
+                    default: return '📍';
+                }
+            };
+
+            useEffect(() => {
+                // Initialize Map if not already done
+                if (!mapRef.current) {
+                    const map = L.map('map-container', { zoomControl: false }).setView(CITY_COORDS["Budapest"], 13);
+                    
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                        attribution: '&copy; OpenStreetMap',
+                        subdomains: 'abcd',
+                        maxZoom: 20
+                    }).addTo(map);
+                    
+                    L.control.zoom({ position: 'bottomright' }).addTo(map);
+                    mapRef.current = map;
+                }
+                
+                const map = mapRef.current;
+                
+                // Fly to city center
+                if (CITY_COORDS[activeCity]) {
+                    map.flyTo(CITY_COORDS[activeCity], 13, { duration: 1.5 });
+                }
+
+                const markersLayer = markersRef.current;
+                markersLayer.clearLayers();
+
+                // Add markers
+                items.forEach(item => {
+                    if (item.lat && item.lng && item.lat !== 0) {
+                        const iconHtml = `<div class="emoji-marker">${getEmoji(item.cat)}</div>`;
+                        const customIcon = L.divIcon({
+                            html: iconHtml,
+                            className: 'bg-transparent',
+                            iconSize: [30, 30],
+                            iconAnchor: [15, 15],
+                            popupAnchor: [0, -10]
+                        });
+
+                        const marker = L.marker([item.lat, item.lng], { icon: customIcon });
+                        
+                        // Popup HTML
+                        const popupContent = `
+                            <div style="border-radius: 12px; overflow: hidden;">
+                                <div style="height: 100px; background-image: url('${item.img || ''}'); background-size: cover; background-position: center; position: relative;">
+                                    <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); padding: 8px;">
+                                        <div style="color: white; font-weight: bold; font-family: 'Quicksand';">${item.title}</div>
+                                    </div>
+                                </div>
+                                <div class="popup-content">
+                                    <div style="font-size: 10px; color: #888; text-transform: uppercase; font-weight: bold;">${item.cat}</div>
+                                    <div style="font-size: 12px; color: #444; margin: 4px 0;">${item.desc}</div>
+                                    <a href="https://maps.google.com/?q=${item.lat},${item.lng}" target="_blank" style="display: block; margin-top: 8px; text-align: center; background: #e11d48; color: white; padding: 4px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: bold;">📍 Google Maps</a>
+                                </div>
+                            </div>
+                        `;
+                        
+                        marker.bindPopup(popupContent);
+                        marker.bindTooltip(item.title, { direction: 'top', offset: [0, -20], opacity: 0.9 }); // Hover tooltip
+                        markersLayer.addLayer(marker);
+                    }
+                });
+
+                markersLayer.addTo(map);
+
+            }, [items, activeCity]); // Re-run when items or city changes
+
+            // Force map resize on mount (fixes mobile/tab glitches)
+            useEffect(() => {
+                setTimeout(() => {
+                    if (mapRef.current) mapRef.current.invalidateSize();
+                }, 200);
+            }, []);
+
+            return <div id="map-container"></div>;
+        };
 
         const TripTimeline = () => {
             const [progress, setProgress] = useState(0);
@@ -489,7 +611,7 @@
                         return bMatch - aMatch;
                     });
 
-                    // Fallback to City Only if no category match (e.g. unique items)
+                    // Fallback to City Only if no category match
                     if (matches.length === 0) {
                         matches = DB.filter(i => i.city === currentItem.city && i.id !== currentItem.id);
                     }
@@ -555,7 +677,6 @@
                 let city = "Budapest 🇭🇺";
                 let defaultSlots = { mor: "", aft: "", eve: "", nht: "" };
 
-                // Pre-fill Logic
                 if (i === 0) { // 01.04
                     defaultSlots.eve = "🛬 Landung 20:10 (EZS1213)";
                     defaultSlots.nht = "Check-in (ab 15:00)";
@@ -878,77 +999,79 @@
                                     <Icon name={isMenuOpen ? "x" : "menu"} className="w-6 h-6 text-slate-700"/>
                                 </button>
                             </div>
-
-                            {/* Desktop Timeline - Visible on MD+ */}
-                             <div className="hidden md:block w-full">
-                                <TripTimeline />
-                             </div>
-
-                             {/* Desktop Navigation & Filters */}
-                             <div className="hidden md:flex gap-4 items-center">
-                                 <div className="flex gap-2">
-                                    <button onClick={() => setView('hub')} className={`px-4 py-2 rounded-lg font-bold text-sm ${view === 'hub' ? 'bg-rose-50 text-rose-700' : 'text-slate-500 hover:bg-slate-50'}`}>Hub</button>
-                                    <button onClick={() => setView('calendar')} className={`px-4 py-2 rounded-lg font-bold text-sm ${view === 'calendar' ? 'bg-rose-50 text-rose-700' : 'text-slate-500 hover:bg-slate-50'}`}>Kalender</button>
-                                 </div>
-                                 <div className="h-6 w-px bg-slate-200"></div>
-                                 
-                                 {view === 'hub' && (
-                                     <div className="flex gap-2 items-center w-full">
-                                         <button onClick={() => { setCityFilter("Favs"); setCatFilter("Alle"); }} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${cityFilter === "Favs" ? 'bg-rose-500 text-white' : 'text-slate-500 hover:bg-slate-50'}`}>❤️ Favs</button>
-                                         <div className="h-4 w-px bg-slate-200"></div>
-                                         {cities.map(c => (
-                                             <button key={c} onClick={() => { setCityFilter(c); setCatFilter("Alle"); }} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${cityFilter === c ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-50'}`}>
-                                                 {c === "Transfer" ? "🚄" : c.substring(0,3).toUpperCase()}
-                                             </button>
-                                         ))}
-                                         
-                                         {/* Category Filter for Desktop */}
-                                         {cityFilter !== "Transfer" && cityFilter !== "Favs" && (
-                                            <div className="flex gap-2 ml-auto">
-                                                {["Alle", "Essen", "Aktivität", "Party"].map(cat => (
-                                                    <button key={cat} onClick={() => setCatFilter(cat)} className={`px-3 py-1 rounded-full text-[10px] font-bold border ${catFilter === cat ? 'bg-rose-100 border-rose-300 text-rose-700' : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'}`}>{cat}</button>
-                                                ))}
-                                            </div>
-                                         )}
-                                     </div>
-                                 )}
-                             </div>
                         </div>
 
-                         {/* Mobile Menu */}
-                        <div className={`overflow-hidden transition-all duration-300 md:hidden ${isMenuOpen ? 'max-h-[600px] border-t border-slate-100 mt-4 pt-4' : 'max-h-0'}`}>
-                            <div className="space-y-4">
-                                <p className="text-xs text-rose-400 font-bold text-center">
-                                    {tripActive ? "Der Trip läuft! 🌍" : (daysLeft > 0 ? `⏳ Noch ${daysLeft} Tage!` : "Trip vorbei 👋")}
-                                </p>
-                                <CurrencyConverter />
-                                <div className="flex justify-center gap-2">
-                                    <button onClick={() => { setView('hub'); setIsMenuOpen(false); }} className={`flex-1 py-2 rounded-lg text-sm font-bold ${view === 'hub' ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-600'}`}>Hub</button>
-                                    <button onClick={() => { setView('calendar'); setIsMenuOpen(false); }} className={`flex-1 py-2 rounded-lg text-sm font-bold ${view === 'calendar' ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-600'}`}>Kalender</button>
-                                </div>
-                                
-                                {view === 'hub' && (
-                                    <div className="space-y-3">
-                                        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                                            <button onClick={() => setCityFilter("Favs")} className={`px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap ${cityFilter === "Favs" ? 'bg-rose-500 text-white' : 'bg-rose-50 text-rose-600'}`}>❤️ Favs</button>
-                                            {cities.map(c => (
-                                                <button key={c} onClick={() => setCityFilter(c)} className={`px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap ${cityFilter === c ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600'}`}>
-                                                    {c === "Transfer" ? "🚄" : c.toUpperCase()}
-                                                </button>
+                        {/* Desktop Timeline - Visible on MD+ */}
+                         <div className="hidden md:block w-full">
+                            <TripTimeline />
+                         </div>
+
+                         {/* Desktop Navigation & Filters */}
+                         <div className="hidden md:flex gap-4 items-center">
+                             <div className="flex gap-2">
+                                <button onClick={() => setView('hub')} className={`px-4 py-2 rounded-lg font-bold text-sm ${view === 'hub' ? 'bg-rose-50 text-rose-700' : 'text-slate-500 hover:bg-slate-50'}`}>Hub</button>
+                                <button onClick={() => setView('calendar')} className={`px-4 py-2 rounded-lg font-bold text-sm ${view === 'calendar' ? 'bg-rose-50 text-rose-700' : 'text-slate-500 hover:bg-slate-50'}`}>Kalender</button>
+                                <button onClick={() => setView('map')} className={`px-4 py-2 rounded-lg font-bold text-sm ${view === 'map' ? 'bg-rose-50 text-rose-700' : 'text-slate-500 hover:bg-slate-50'}`}>Karte 🗺️</button>
+                             </div>
+                             <div className="h-6 w-px bg-slate-200"></div>
+                             
+                             {(view === 'hub' || view === 'map') && (
+                                 <div className="flex gap-2 items-center w-full">
+                                     <button onClick={() => { setCityFilter("Favs"); setCatFilter("Alle"); }} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${cityFilter === "Favs" ? 'bg-rose-500 text-white' : 'text-slate-500 hover:bg-slate-50'}`}>❤️ Favs</button>
+                                     <div className="h-4 w-px bg-slate-200"></div>
+                                     {cities.map(c => (
+                                         <button key={c} onClick={() => { setCityFilter(c); setCatFilter("Alle"); }} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${cityFilter === c ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-50'}`}>
+                                             {c === "Transfer" ? "🚄" : c.substring(0,3).toUpperCase()}
+                                         </button>
+                                     ))}
+                                     
+                                     {/* Category Filter */}
+                                     {cityFilter !== "Transfer" && cityFilter !== "Favs" && (
+                                         <div className="flex gap-2 ml-auto">
+                                             {["Alle", "Essen", "Aktivität", "Party"].map(cat => (
+                                                 <button key={cat} onClick={() => setCatFilter(cat)} className={`px-3 py-1 rounded-full text-[10px] font-bold border ${catFilter === cat ? 'bg-rose-100 border-rose-300 text-rose-700' : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'}`}>{cat}</button>
+                                             ))}
+                                         </div>
+                                     )}
+                                 </div>
+                             )}
+                         </div>
+                    </header>
+                    
+                    {/* Mobile Menu */}
+                    <div className={`overflow-hidden transition-all duration-300 md:hidden ${isMenuOpen ? 'max-h-[600px] border-t border-slate-100 mt-4 pt-4 px-4 bg-white/95 backdrop-blur-lg fixed left-0 right-0 z-40 shadow-lg top-[70px]' : 'max-h-0'}`}>
+                        <div className="space-y-4 pb-4">
+                            <p className="text-xs text-rose-400 font-bold text-center">
+                                {tripActive ? "Der Trip läuft! 🌍" : (daysLeft > 0 ? `⏳ Noch ${daysLeft} Tage!` : "Trip vorbei 👋")}
+                            </p>
+                            <CurrencyConverter />
+                            <div className="flex justify-center gap-2">
+                                <button onClick={() => { setView('hub'); setIsMenuOpen(false); }} className={`flex-1 py-2 rounded-lg text-sm font-bold ${view === 'hub' ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-600'}`}>Hub</button>
+                                <button onClick={() => { setView('calendar'); setIsMenuOpen(false); }} className={`flex-1 py-2 rounded-lg text-sm font-bold ${view === 'calendar' ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-600'}`}>Kalender</button>
+                                <button onClick={() => { setView('map'); setIsMenuOpen(false); }} className={`flex-1 py-2 rounded-lg text-sm font-bold ${view === 'map' ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-600'}`}>Karte</button>
+                            </div>
+                            
+                            {(view === 'hub' || view === 'map') && (
+                                <div className="space-y-3">
+                                    <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                                        <button onClick={() => setCityFilter("Favs")} className={`px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap ${cityFilter === "Favs" ? 'bg-rose-500 text-white' : 'bg-rose-50 text-rose-600'}`}>❤️ Favs</button>
+                                        {cities.map(c => (
+                                            <button key={c} onClick={() => setCityFilter(c)} className={`px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap ${cityFilter === c ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                                                {c === "Transfer" ? "🚄" : c.toUpperCase()}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    {cityFilter !== "Transfer" && cityFilter !== "Favs" && (
+                                        <div className="flex gap-2 overflow-x-auto no-scrollbar">
+                                            {["Alle", "Essen", "Aktivität", "Party"].map(cat => (
+                                                <button key={cat} onClick={() => setCatFilter(cat)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border ${catFilter === cat ? 'bg-rose-100 border-rose-300 text-rose-700' : 'bg-white border-slate-200 text-slate-500'}`}>{cat}</button>
                                             ))}
                                         </div>
-                                        {cityFilter !== "Transfer" && cityFilter !== "Favs" && (
-                                            <div className="flex gap-2 overflow-x-auto no-scrollbar">
-                                                {["Alle", "Essen", "Aktivität", "Party"].map(cat => (
-                                                    <button key={cat} onClick={() => setCatFilter(cat)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border ${catFilter === cat ? 'bg-rose-100 border-rose-300 text-rose-700' : 'bg-white border-slate-200 text-slate-500'}`}>{cat}</button>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
-                    </header>
+                    </div>
                     
                     <main className="max-w-7xl mx-auto">
                         {view === 'hub' ? (
@@ -972,8 +1095,20 @@
                                     </div>
                                 )}
                             </div>
-                        ) : (
+                        ) : view === 'calendar' ? (
                             <TripCalendar />
+                        ) : (
+                            <div className="p-4 fade-in h-full">
+                                <div className="bg-white rounded-3xl p-2 shadow-lg h-full border-4 border-white">
+                                    <MapView items={filteredDB} activeCity={cityFilter === 'Favs' ? 'Budapest' : cityFilter} />
+                                </div>
+                                <div className="mt-4 text-center text-xs text-slate-400 font-bold bg-white/50 inline-block px-4 py-2 rounded-full backdrop-blur-sm mx-auto flex justify-center border border-white">
+                                    <span className="mr-3">🍔 Essen</span>
+                                    <span className="mr-3">🏰 Aktivität</span>
+                                    <span className="mr-3">🍸 Party</span>
+                                    <span>🚆 Transport</span>
+                                </div>
+                            </div>
                         )}
                     </main>
 
