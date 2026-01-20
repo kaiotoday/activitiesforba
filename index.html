@@ -441,7 +441,91 @@ const CurrencyConverter = ({ city }) => {
         </div>
     );
 };
+const EmergencyModal = ({ isOpen, onClose, city }) => {
+    const emergencyInfo = {
+        "Budapest": {
+            emergency: "112",
+            embassy: "Schwefelquelle utca 14, 1025 Budapest",
+            embassyPhone: "+36 1 460 0700",
+            helpPhrase: "Segítségre van szükségem"
+        },
+        "Wien": {
+            emergency: "112",
+            embassy: "Prinz-Eugen-Straße 7, 1030 Wien",
+            embassyPhone: "+43 1 795 05 0",
+            helpPhrase: "Ich brauche Hilfe"
+        },
+        "Prag": {
+            emergency: "112",
+            embassy: "Pevnostní 7, 162 00 Praha 6",
+            embassyPhone: "+420 220 400 611",
+            helpPhrase: "Potřebuji pomoc"
+        }
+    };
+    
+    const info = emergencyInfo[city] || emergencyInfo["Budapest"];
+    
+    const speak = (text) => {
+        if ('speechSynthesis' in window) {
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = city === "Budapest" ? "hu-HU" : city === "Wien" ? "de-AT" : "cs-CZ";
+            window.speechSynthesis.speak(u);
+        }
+    };
+    
+    if (!isOpen) return null;
+    
+    return (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-sm modal-enter" onClick={onClose}>
+            <div className="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-sm p-6 shadow-2xl relative border-4 border-red-500" onClick={e => e.stopPropagation()}>
+                <button onClick={onClose} className="absolute top-4 right-4 p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full">
+                    <Icon name="x" className="w-5 h-5 text-slate-400"/>
+                </button>
+                
+                <div className="text-center mb-6">
+                    <div className="text-5xl mb-2">🛡️</div>
+                    <h3 className="text-xl font-bold text-red-600 dark:text-red-400">Emergency Info</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{city}</p>
+                </div>
+                
+                <div className="space-y-4">
+                    <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-xl border-2 border-red-200 dark:border-red-800">
+                        <div className="text-xs font-bold text-red-800 dark:text-red-300 uppercase mb-1">Notruf</div>
+                        <a href={`tel:${info.emergency}`} className="text-3xl font-black text-red-600 dark:text-red-400">{info.emergency}</a>
+                    </div>
+                    
+                    <div className="bg-slate-50 dark:bg-slate-700 p-4 rounded-xl">
+                        <div className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-2 flex items-center gap-1">
+                            <Icon name="flag" className="w-3 h-3"/> Schweizer Botschaft
+                        </div>
+                        <p className="text-sm text-slate-700 dark:text-slate-200 mb-2">{info.embassy}</p>
+                        <a href={`tel:${info.embassyPhone}`} className="text-sm font-bold text-rose-600 dark:text-rose-400">{info.embassyPhone}</a>
+                    </div>
+                    
+                    <div 
+                        className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-xl cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors border border-amber-200 dark:border-amber-800"
+                        onClick={() => speak(info.helpPhrase)}
+                    >
+                        <div className="text-xs font-bold text-amber-800 dark:text-amber-300 uppercase mb-1 flex items-center gap-1">
+                            <Icon name="volume-2" className="w-3 h-3"/> Sag das den Locals
+                        </div>
+                        <p className="text-lg font-bold text-amber-900 dark:text-amber-200">"{info.helpPhrase}"</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
 
+const EmergencyButton = ({ onClick }) => (
+    <button 
+        onClick={onClick}
+        className="bg-red-600 hover:bg-red-700 text-white p-4 rounded-full shadow-xl transition-transform hover:scale-110 flex items-center justify-center mb-2"
+        title="Notfall & Botschaft"
+    >
+        <span className="text-2xl">🛡️</span>
+    </button>
+);
         const TikTokIcon = () => (
             <svg viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3">
                 <path d="M12.525.02c1.31-.02 2.61-.01 3.918.02.08 1.84 1.256 3.24 3.42 3.74V7.9c-1.63-.02-2.924-.6-3.879-1.92V12.9c0 3.32-3.11 5.76-6.618 4.69C7.38 17 6.13 14.88 7.5 12.3c.75-1.42 2.13-2.22 3.82-2.06V7c-3.14-.35-6.66 2.36-6.62 6.58.04 4.34 4.29 7.37 8.28 6.44 3.2-.74 5.38-3.9 5.25-7.74V4.68c2.16.03 4.14 1.3 5.09 3.5v-4.8c-.85-.18-1.7-.28-2.56-.28-1.5 0-2.88.58-4.04 1.58V0h-3.918z"/>
@@ -529,6 +613,10 @@ const CurrencyConverter = ({ city }) => {
                      // Dispatch custom event to update Radar UI outside map
                      const event = new CustomEvent('radarUpdate', { detail: { dist: nearestDist, name: nearestName } });
                      window.dispatchEvent(event);
+                    // Check for stamp unlocks
+                     if (window.checkStampUnlock) {
+                         window.checkStampUnlock(e.latlng.lat, e.latlng.lng);
+                     }
                 });
                  
                 map.on('locationerror', (e) => {
@@ -641,6 +729,24 @@ const CurrencyConverter = ({ city }) => {
                     >
                         <Icon name="crosshair" className="w-5 h-5" />
                     </button>
+                    {/* Get Me Home Button - nur im Drunk Mode */}
+                    {drunkMode && (
+                        <button 
+                            onClick={() => {
+                                const hotelCoords = {
+                                    "Budapest": [47.4965, 19.0629],
+                                    "Wien": [48.1936, 16.3547],
+                                    "Prag": [50.0755, 14.4378]
+                                };
+                                const coords = hotelCoords[activeCity] || hotelCoords["Budapest"];
+                                window.open(`https://www.google.com/maps/dir/?api=1&destination=${coords[0]},${coords[1]}&travelmode=walking`, '_blank');
+                            }}
+                            className="absolute top-20 left-1/2 transform -translate-x-1/2 z-[500] bg-neon-pink text-black px-8 py-4 rounded-2xl shadow-2xl border-4 border-neon-green font-black text-xl animate-pulse hover:scale-110 transition-transform"
+                            title="Bring mich heim!"
+                        >
+                            🚕 BRING MICH HEIM
+                        </button>
+                    )}
                 </div>
             );
         };
@@ -1371,7 +1477,8 @@ const CurrencyConverter = ({ city }) => {
 
             // Alcohol Tracker State
             const [trackerOpen, setTrackerOpen] = useState(false);
-
+             // Emergency Modal State
+            const [emergencyOpen, setEmergencyOpen] = useState(false);
             // Dark Mode & Drunk Mode State
             const [darkMode, setDarkMode] = useState(false);
             const [drunkMode, setDrunkMode] = useState(false);
@@ -1506,7 +1613,35 @@ const CurrencyConverter = ({ city }) => {
 
             const [tripActive, setTripActive] = useState(false);
             const [daysLeft, setDaysLeft] = useState(0);
+            // Passport Stamps State
+    const [stamps, setStamps] = useState(() => {
+    const saved = localStorage.getItem('passport_stamps');
+    return saved ? JSON.parse(saved) : { BUD: false, VIE: false, PRG: false };
+});
 
+useEffect(() => {
+    localStorage.setItem('passport_stamps', JSON.stringify(stamps));
+}, [stamps]);
+
+const checkStampUnlock = (userLat, userLng) => {
+    const cityCoords = {
+        BUD: [47.4979, 19.0402],
+        VIE: [48.2082, 16.3738],
+        PRG: [50.0755, 14.4378]
+    };
+    
+    Object.entries(cityCoords).forEach(([code, [lat, lng]]) => {
+        const distance = Math.sqrt(
+            Math.pow(lat - userLat, 2) + Math.pow(lng - userLng, 2)
+        ) * 111;
+        
+        if (distance < 20 && !stamps[code]) {
+            setStamps(prev => ({ ...prev, [code]: true }));
+            triggerConfetti();
+            triggerToast(`🎉 Passport Stamp unlocked: ${code}!`);
+        }
+    });
+};
             useEffect(() => {
                 const now = new Date();
                 const start = new Date('2026-04-01T00:00:00');
@@ -1522,6 +1657,13 @@ const CurrencyConverter = ({ city }) => {
                     setTripActive(false);
                 }
             }, []);
+            // Make checkStampUnlock available globally for MapView
+useEffect(() => {
+    window.checkStampUnlock = checkStampUnlock;
+    return () => {
+        delete window.checkStampUnlock;
+    };
+}, [stamps]);
 
             const cities = ["Budapest", "Transfer", "Wien", "Prag"];
 
@@ -1666,7 +1808,22 @@ const CurrencyConverter = ({ city }) => {
                                     <span>🎉</span> HYPE
                                 </button>
                             </div>
-
+{/* Passport Stamps */}
+                                   <div className="flex items-center gap-2 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md px-3 py-2 rounded-xl border border-rose-100 dark:border-slate-700 shadow-sm">
+                                       {Object.entries(stamps).map(([code, unlocked]) => (
+                                           <div 
+                                               key={code} 
+                                               className={`w-10 h-10 rounded-lg border-2 flex items-center justify-center font-black text-xs transition-all ${
+                                                   unlocked 
+                                                       ? 'bg-gradient-to-br from-rose-400 to-amber-400 border-amber-300 text-white shadow-lg scale-110' 
+                                                       : 'bg-slate-100 dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-400 dark:text-slate-500'
+                                               }`}
+                                               title={unlocked ? `${code} Stamp unlocked!` : `Visit ${code} to unlock`}
+                                           >
+                                               {code}
+                                           </div>
+                                       ))}
+                                   </div>
                             <CurrencyConverter city={cityFilter}/>
                             
                             <div className="flex justify-center">
@@ -1750,8 +1907,11 @@ const CurrencyConverter = ({ city }) => {
 
                     {/* FABs */}
                     {view !== 'calendar' && cityFilter !== 'Favs' && !drunkMode && (
-                        <SurvivalDictionary city={cityFilter} />
-                    )}
+    <>
+        <EmergencyButton onClick={() => setEmergencyOpen(true)} />
+        <SurvivalDictionary city={cityFilter} />
+    </>
+)}
                     {!drunkMode && <ChallengeButton />}
                     
                     {/* Render Modal at Root level */}
@@ -1766,6 +1926,7 @@ const CurrencyConverter = ({ city }) => {
                     />
 
                     <StaticAlternativesModal isOpen={modalOpen} onClose={() => setModalOpen(false)} currentItem={modalItem} />
+                    <EmergencyModal isOpen={emergencyOpen} onClose={() => setEmergencyOpen(false)} city={cityFilter} />
                     <Toast message={toastMsg} isVisible={showToast} onClose={() => setShowToast(false)} />
                 </div>
             );
