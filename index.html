@@ -150,12 +150,73 @@
 
         const FX_RATES = { 'HUF': 430, 'EUR': 1.06, 'CZK': 26 };
 
-        const DICTIONARY = {
-            "Budapest": { hello: "Szia", cheers: "Egészségedre", beer: "Sör", thanks: "Köszönöm", bill: "A számlát kérem", lang: "hu-HU" },
-            "Wien": { hello: "Servus", cheers: "Prost", beer: "Krügerl", thanks: "Danke", bill: "Zahlen bitte", lang: "de-AT" },
-            "Prag": { hello: "Ahoj", cheers: "Na zdraví", beer: "Pivo", thanks: "Děkuji", bill: "Účet prosím", lang: "cs-CZ" },
-            "Transfer": { hello: "Choo Choo", cheers: "Prost", beer: "Bier", thanks: "Danke", bill: "Ticket", lang: "en-US" }
-        };
+       const DICTIONARY = {
+    "Budapest": { 
+        hello: "Szia", 
+        cheers: "Egészségedre", 
+        beer: "Sör", 
+        thanks: "Köszönöm", 
+        bill: "A számlát kérem",
+        ass: "Segg",
+        fuck: "Basszus",
+        drunk: "Részeg vagyok",
+        cool: "Nagyon jó",
+        sexy: "Szexi",
+        hungry: "Éhes vagyok",
+        thirsty: "Szomjas vagyok",
+        shot: "Feles",
+        beautiful: "Gyönyörű",
+        love: "Szerelmem",
+        iloveyou: "Szeretlek",
+        lang: "hu-HU" 
+    },
+    "Wien": { 
+        hello: "Servus", 
+        cheers: "Prost", 
+        beer: "Krügerl", 
+        thanks: "Danke", 
+        bill: "Zahlen bitte",
+        ass: "Oasch",
+        fuck: "Scheiße",
+        drunk: "I bin betrunken",
+        cool: "Leiwand",
+        sexy: "Sexy",
+        hungry: "I hab Hunger",
+        thirsty: "I hab Durst",
+        shot: "Stamperl",
+        beautiful: "Wunderschön",
+        love: "Mein Schatz",
+        iloveyou: "I liab di",
+        lang: "de-AT" 
+    },
+    "Prag": { 
+        hello: "Ahoj", 
+        cheers: "Na zdraví", 
+        beer: "Pivo", 
+        thanks: "Děkuji", 
+        bill: "Účet prosím",
+        ass: "Prdel",
+        fuck: "Do prdele",
+        drunk: "Jsem opilý",
+        cool: "Super",
+        sexy: "Sexy",
+        hungry: "Mám hlad",
+        thirsty: "Mám žízeň",
+        shot: "Panák",
+        beautiful: "Krásná",
+        love: "Můj miláček",
+        iloveyou: "Miluji tě",
+        lang: "cs-CZ" 
+    },
+    "Transfer": { 
+        hello: "Choo Choo", 
+        cheers: "Prost", 
+        beer: "Bier", 
+        thanks: "Danke", 
+        bill: "Ticket", 
+        lang: "en-US" 
+    }
+};
 
         const CHALLENGES = [
             "📸 Macht ein Foto, auf dem einer von euch wie ein Tourist-Klischee posiert.",
@@ -1386,10 +1447,9 @@ const EmergencyButton = ({ onClick }) => (
             if (item.city === "Prag") { themeClass = "border-emerald-200 dark:border-emerald-900"; btnClass = "bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-800 dark:hover:bg-emerald-700"; }
             if (item.city === "Transfer") { themeClass = "border-indigo-200 dark:border-indigo-900"; btnClass = "bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-800 dark:hover:bg-indigo-700"; }
 
-            return (
-                <div className={`bg-white dark:bg-slate-800 rounded-2xl shadow-sm border ${themeClass} overflow-hidden card-hover flex flex-col h-full fade-in relative group`}>
-                    <div className="h-44 relative bg-slate-100 dark:bg-slate-700 overflow-hidden">
-                        {!imgError && item.img ? (
+                return (
+                        <div onClick={handleCardClick} className={`bg-white dark:bg-slate-800 rounded-2xl shadow-sm border ${themeClass} overflow-hidden card-hover flex flex-col h-full fade-in relative group`}>
+                                {!imgError && item.img ? (
                             <img src={imagePath} alt={item.title} className="w-full h-full object-cover transition-opacity duration-300" onError={() => setImgError(true)} />
                         ) : (
                             <div className="img-fallback" style={{display: 'flex', backgroundColor: '#e2e8f0', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontWeight: 700, fontSize: '1.5rem', width: '100%', height: '100%'}}>
