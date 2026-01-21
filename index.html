@@ -156,21 +156,7 @@
             "Prag": { hello: "Ahoj", cheers: "Na zdraví", beer: "Pivo", thanks: "Děkuji", bill: "Účet prosím", lang: "cs-CZ" },
             "Transfer": { hello: "Choo Choo", cheers: "Prost", beer: "Bier", thanks: "Danke", bill: "Ticket", lang: "en-US" }
         };
-const ACHIEVEMENTS = [
-    { id: 'beer10', icon: '🍺', title: 'Beer Connoisseur', desc: '10 verschiedene Biere probiert', target: 10, type: 'beer' },
-    { id: 'early', icon: '🌅', title: 'Early Bird', desc: 'Vor 8 Uhr Frühstücken', target: 1, type: 'manual' },
-    { id: 'night', icon: '🌃', title: 'Night Owl', desc: 'Nach 4 Uhr noch wach', target: 1, type: 'manual' },
-    { id: 'local', icon: '🗣️', title: 'Local Hero', desc: 'Bestellung auf Landessprache', target: 3, type: 'manual' },
-    { id: 'love', icon: '💑', title: 'Lovebirds', desc: '5 Couple-Selfies gemacht', target: 5, type: 'manual' },
-    { id: 'metro', icon: '🚇', title: 'Metro Master', desc: 'Alle 3 U-Bahnen benutzt', target: 3, type: 'manual' },
-    { id: 'culture', icon: '🏛️', title: 'Culture Vulture', desc: '5 Sehenswürdigkeiten besucht', target: 5, type: 'sights' },
-    { id: 'foodie', icon: '🍽️', title: 'Foodie', desc: '15 Restaurants probiert', target: 15, type: 'food' },
-    { id: 'party', icon: '🎉', title: 'Party Animal', desc: '10 Bars/Clubs besucht', target: 10, type: 'party' },
-    { id: 'drunk', icon: '🥴', title: 'Legendary', desc: '20+ Drinks in einer Nacht', target: 20, type: 'drinks' },
-    { id: 'challenge', icon: '🎯', title: 'Challenge Master', desc: '10 Challenges erfüllt', target: 10, type: 'challenge' },
-    { id: 'explorer', icon: '🗺️', title: 'Explorer', desc: 'Alle 3 Städte besucht', target: 3, type: 'cities' }
-];
-        
+
         const CHALLENGES = [
             "📸 Macht ein Foto, auf dem einer von euch wie ein Tourist-Klischee posiert.",
             "🎬 Findet einen Aussichtspunkt und macht ein „dramatisches Filmplakat“-Foto.",
@@ -365,22 +351,7 @@ const ACHIEVEMENTS = [
             }, [name]);
             return <i data-lucide={name} className={className}></i>;
         };
-const AchievementToast = ({ achievement }) => {
-    if (!achievement) return null;
-    
-    return (
-        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-[9999] modal-enter">
-            <div className="bg-gradient-to-r from-amber-400 to-orange-500 text-white px-6 py-4 rounded-2xl shadow-2xl border-4 border-amber-200 flex items-center gap-4 animate-bounce-slow">
-                <span className="text-5xl">{achievement.icon}</span>
-                <div>
-                    <div className="font-black text-lg">ACHIEVEMENT UNLOCKED!</div>
-                    <div className="font-bold">{achievement.title}</div>
-                    <div className="text-xs opacity-90">{achievement.desc}</div>
-                </div>
-            </div>
-        </div>
-    );
-};
+
         const Toast = ({ message, isVisible, onClose }) => {
             useEffect(() => {
                 if (isVisible) {
@@ -545,91 +516,7 @@ const EmergencyModal = ({ isOpen, onClose, city }) => {
         </div>
     );
 };
-const AchievementModal = ({ isOpen, onClose, achievements: unlockedAchievements, progress, onManualUnlock }) => {
-    if (!isOpen) return null;
-    
-    const unlockedCount = Object.keys(unlockedAchievements).length;
-    const totalCount = ACHIEVEMENTS.length;
-    
-    return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm modal-enter" onClick={onClose}>
-            <div className="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-2xl max-h-[85vh] overflow-hidden shadow-2xl relative border-4 border-amber-400" onClick={e => e.stopPropagation()}>
-                <div className="p-6 border-b border-amber-100 dark:border-slate-700 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-slate-700 dark:to-slate-800">
-                    <button onClick={onClose} className="absolute top-4 right-4 p-2 hover:bg-white dark:hover:bg-slate-600 rounded-full">
-                        <Icon name="x" className="w-5 h-5 text-slate-400"/>
-                    </button>
-                    <div className="text-4xl mb-2">🏆</div>
-                    <h2 className="text-2xl font-black text-amber-900 dark:text-amber-300">Achievements</h2>
-                    <p className="text-sm text-amber-700 dark:text-amber-400">{unlockedCount} / {totalCount} unlocked</p>
-                </div>
-                
-                <div className="p-6 overflow-y-auto max-h-[60vh] custom-scroll">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {ACHIEVEMENTS.map(ach => {
-                            const unlocked = unlockedAchievements[ach.id];
-                            const currentProgress = progress[ach.type] || 0;
-                            const progressPercent = Math.min((currentProgress / ach.target) * 100, 100);
-                            
-                            return (
-                                <div 
-                                    key={ach.id}
-                                    className={`p-4 rounded-xl border-2 transition-all ${
-                                        unlocked 
-                                            ? 'bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 border-amber-400 dark:border-amber-600' 
-                                            : 'bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600 opacity-60'
-                                    }`}
-                                >
-                                    <div className="flex items-start justify-between mb-2">
-                                        <span className={`text-4xl ${unlocked ? '' : 'grayscale opacity-40'}`}>{ach.icon}</span>
-                                        {unlocked && <span className="text-2xl">✅</span>}
-                                    </div>
-                                    <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-1">{ach.title}</h3>
-                                    <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">{ach.desc}</p>
-                                    
-                                    {!unlocked && ach.type !== 'manual' && (
-                                        <div className="space-y-1">
-                                            <div className="flex justify-between text-xs font-bold text-slate-500 dark:text-slate-400">
-                                                <span>Progress</span>
-                                                <span>{currentProgress} / {ach.target}</span>
-                                            </div>
-                                            <div className="w-full h-2 bg-slate-200 dark:bg-slate-600 rounded-full overflow-hidden">
-                                                <div className="h-full bg-amber-500 transition-all" style={{width: `${progressPercent}%`}}></div>
-                                            </div>
-                                        </div>
-                                    )}
-                                    
-                                    {!unlocked && ach.type === 'manual' && (
-                                        <button 
-                                            onClick={() => onManualUnlock(ach.id)}
-                                            className="w-full py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-lg mt-2"
-                                        >
-                                            Unlock manually
-                                        </button>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
 
-const AchievementButton = ({ onClick, count }) => (
-    <button 
-        onClick={onClick}
-        className="bg-amber-600 hover:bg-amber-700 text-white p-4 rounded-full shadow-xl transition-transform hover:scale-110 flex items-center justify-center mb-2 relative"
-        title="Achievements"
-    >
-        <span className="text-2xl">🏆</span>
-        {count > 0 && (
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                {count}
-            </span>
-        )}
-    </button>
-);
 const EmergencyButton = ({ onClick }) => (
     <button 
         onClick={onClick}
@@ -1439,18 +1326,7 @@ const EmergencyButton = ({ onClick }) => (
         const Card = ({ item, onShowAlternatives, toggleFav, isFav, onToast }) => {
             const [showLocal, setShowLocal] = useState(false);
             const [imgError, setImgError] = useState(false);
-const handleCardClick = () => {
-    // Track for achievements
-    if (item.cat === 'Essen' && window.updateAchievementProgress) {
-        window.updateAchievementProgress('food', 1);
-    }
-    if (item.cat === 'Party' && window.updateAchievementProgress) {
-        window.updateAchievementProgress('party', 1);
-    }
-    if (item.cat === 'Aktivität' && window.updateAchievementProgress) {
-        window.updateAchievementProgress('sights', 1);
-    }
-};
+
             const imagePath = `${item.img}`;
 
             const openSearch = (platform) => {
@@ -1490,7 +1366,6 @@ const handleCardClick = () => {
                 if(res.includes("Zwingend")) return "badge-res-high";
                 if(res.includes("Empfohlen")) return "badge-res-med";
                 return "badge-res-low";
-                onClick={handleCardClick}
             };
 
             const getLocalPrice = () => {
@@ -1604,58 +1479,6 @@ const handleCardClick = () => {
             const [trackerOpen, setTrackerOpen] = useState(false);
              // Emergency Modal State
             const [emergencyOpen, setEmergencyOpen] = useState(false);
-            // Achievement State
-const [achievements, setAchievements] = useState(() => {
-    const saved = localStorage.getItem('trip_achievements');
-    return saved ? JSON.parse(saved) : {};
-});
-
-const [achievementProgress, setAchievementProgress] = useState(() => {
-    const saved = localStorage.getItem('achievement_progress');
-    return saved ? JSON.parse(saved) : {
-        beer: 0, sights: 0, food: 0, party: 0, drinks: 0, challenge: 0, cities: 0
-    };
-});
-
-const [showAchievementToast, setShowAchievementToast] = useState(null);
-
-useEffect(() => {
-    localStorage.setItem('trip_achievements', JSON.stringify(achievements));
-}, [achievements]);
-
-useEffect(() => {
-    localStorage.setItem('achievement_progress', JSON.stringify(achievementProgress));
-}, [achievementProgress]);
-
-const unlockAchievement = (achievementId) => {
-    if (!achievements[achievementId]) {
-        setAchievements(prev => ({ ...prev, [achievementId]: true }));
-        const ach = ACHIEVEMENTS.find(a => a.id === achievementId);
-        setShowAchievementToast(ach);
-        triggerConfetti();
-        setTimeout(() => setShowAchievementToast(null), 4000);
-    }
-};
-
-const updateProgress = (type, increment = 1) => {
-    setAchievementProgress(prev => {
-        const newVal = prev[type] + increment;
-        const updated = { ...prev, [type]: newVal };
-        
-        // Check achievements
-        ACHIEVEMENTS.forEach(ach => {
-            if (ach.type === type && newVal >= ach.target && !achievements[ach.id]) {
-                unlockAchievement(ach.id);
-            }
-        });
-        
-        return updated;
-    });
-};
-
-const manualUnlock = (achievementId) => {
-    unlockAchievement(achievementId);
-};
             // Dark Mode & Drunk Mode State
             const [darkMode, setDarkMode] = useState(false);
             const [drunkMode, setDrunkMode] = useState(false);
@@ -1799,6 +1622,7 @@ const manualUnlock = (achievementId) => {
 useEffect(() => {
     localStorage.setItem('passport_stamps', JSON.stringify(stamps));
 }, [stamps]);
+
 const checkStampUnlock = (userLat, userLng) => {
     const cityCoords = {
         BUD: [47.4979, 19.0402],
@@ -1814,8 +1638,7 @@ const checkStampUnlock = (userLat, userLng) => {
         if (distance < 20 && !stamps[code]) {
             setStamps(prev => ({ ...prev, [code]: true }));
             triggerConfetti();
-            triggerToast(`🎉 Welcome to ${code === 'BUD' ? 'Budapest' : code === 'VIE' ? 'Vienna' : 'Prague'}!`);
-            updateProgress('cities', 1); // NEW: Update achievement progress
+            triggerToast(`🎉 Passport Stamp unlocked: ${code}!`);
         }
     });
 };
@@ -1837,12 +1660,6 @@ const checkStampUnlock = (userLat, userLng) => {
             // Make checkStampUnlock available globally for MapView
 useEffect(() => {
     window.checkStampUnlock = checkStampUnlock;
-    useEffect(() => {
-    window.updateAchievementProgress = updateProgress;
-    return () => {
-        delete window.updateAchievementProgress;
-    };
-}, [achievementProgress]);
     return () => {
         delete window.checkStampUnlock;
     };
@@ -2091,7 +1908,6 @@ useEffect(() => {
                     {/* FABs */}
                     {view !== 'calendar' && cityFilter !== 'Favs' && !drunkMode && (
     <>
-        <AchievementButton onClick={() => setAchievementOpen(true)} count={Object.keys(achievements).length} />
         <EmergencyButton onClick={() => setEmergencyOpen(true)} />
         <SurvivalDictionary city={cityFilter} />
     </>
@@ -2111,14 +1927,6 @@ useEffect(() => {
 
                     <StaticAlternativesModal isOpen={modalOpen} onClose={() => setModalOpen(false)} currentItem={modalItem} />
                     <EmergencyModal isOpen={emergencyOpen} onClose={() => setEmergencyOpen(false)} city={cityFilter} />
-                    <AchievementModal 
-                        isOpen={achievementOpen} 
-                        onClose={() => setAchievementOpen(false)} 
-                        achievements={achievements}
-                        progress={achievementProgress}
-                        onManualUnlock={manualUnlock}
-                    />
-                    <AchievementToast achievement={showAchievementToast} />
                     <Toast message={toastMsg} isVisible={showToast} onClose={() => setShowToast(false)} />
                 </div>
             );
